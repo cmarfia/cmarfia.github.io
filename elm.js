@@ -586,11 +586,11 @@ function _Debug_crash_UNUSED(identifier, fact1, fact2, fact3, fact4)
 
 function _Debug_regionToString(region)
 {
-	if (region.R.F === region.Z.F)
+	if (region.R.D === region.Y.D)
 	{
-		return 'on line ' + region.R.F;
+		return 'on line ' + region.R.D;
 	}
-	return 'on lines ' + region.R.F + ' through ' + region.Z.F;
+	return 'on lines ' + region.R.D + ' through ' + region.Y.D;
 }
 
 
@@ -1841,9 +1841,9 @@ var _Platform_worker = F4(function(impl, flagDecoder, debugMetadata, args)
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.aM,
-		impl.a1,
-		impl.a_,
+		impl.aK,
+		impl.a$,
+		impl.aZ,
 		function() { return function() {} }
 	);
 });
@@ -3941,15 +3941,15 @@ function _Markdown_formatOptions(options)
 		return code;
 	}
 
-	var gfm = options.ab.a;
+	var gfm = options.aa.a;
 
 	return {
 		highlight: toHighlight,
 		gfm: gfm,
-		tables: gfm && gfm.a$,
-		breaks: gfm && gfm.az,
-		sanitize: options.aq,
-		smartypants: options.as
+		tables: gfm && gfm.a_,
+		breaks: gfm && gfm.ay,
+		sanitize: options.ao,
+		smartypants: options.aq
 	};
 }
 
@@ -3966,11 +3966,11 @@ var _Browser_element = _Debugger_element || F4(function(impl, flagDecoder, debug
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.aM,
-		impl.a1,
-		impl.a_,
+		impl.aK,
+		impl.a$,
+		impl.aZ,
 		function(sendToApp, initialModel) {
-			var view = impl.a3;
+			var view = impl.a1;
 			/**/
 			var domNode = args['node'];
 			//*/
@@ -4002,12 +4002,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.aM,
-		impl.a1,
-		impl.a_,
+		impl.aK,
+		impl.a$,
+		impl.aZ,
 		function(sendToApp, initialModel) {
-			var divertHrefToApp = impl.G && impl.G(sendToApp)
-			var view = impl.a3;
+			var divertHrefToApp = impl.F && impl.F(sendToApp)
+			var view = impl.a1;
 			var title = _VirtualDom_doc.title;
 			var bodyNode = _VirtualDom_doc.body;
 			var currNode = _VirtualDom_virtualize(bodyNode);
@@ -4015,12 +4015,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 			{
 				_VirtualDom_divertHrefToApp = divertHrefToApp;
 				var doc = view(model);
-				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.ay);
+				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.ax);
 				var patches = _VirtualDom_diff(currNode, nextNode);
 				bodyNode = _VirtualDom_applyPatches(bodyNode, currNode, patches, sendToApp);
 				currNode = nextNode;
 				_VirtualDom_divertHrefToApp = 0;
-				(title !== doc.a0) && (_VirtualDom_doc.title = title = doc.a0);
+				(title !== doc.at) && (_VirtualDom_doc.title = title = doc.at);
 			});
 		}
 	);
@@ -4071,12 +4071,12 @@ function _Browser_makeAnimator(model, draw)
 
 function _Browser_application(impl)
 {
-	var onUrlChange = impl.aV;
-	var onUrlRequest = impl.aW;
+	var onUrlChange = impl.aU;
+	var onUrlRequest = impl.aV;
 	var key = function() { key.a(onUrlChange(_Browser_getUrl())); };
 
 	return _Browser_document({
-		G: function(sendToApp)
+		F: function(sendToApp)
 		{
 			key.a = sendToApp;
 			_Browser_window.addEventListener('popstate', key);
@@ -4092,9 +4092,9 @@ function _Browser_application(impl)
 					var next = elm$url$Url$fromString(href).a;
 					sendToApp(onUrlRequest(
 						(next
-							&& curr.am === next.am
-							&& curr.ac === next.ac
-							&& curr.aj.a === next.aj.a
+							&& curr.ak === next.ak
+							&& curr.ab === next.ab
+							&& curr.ah.a === next.ah.a
 						)
 							? elm$browser$Browser$Internal(next)
 							: elm$browser$Browser$External(href)
@@ -4102,13 +4102,13 @@ function _Browser_application(impl)
 				}
 			});
 		},
-		aM: function(flags)
+		aK: function(flags)
 		{
-			return A3(impl.aM, flags, _Browser_getUrl(), key);
+			return A3(impl.aK, flags, _Browser_getUrl(), key);
 		},
-		a3: impl.a3,
 		a1: impl.a1,
-		a_: impl.a_
+		a$: impl.a$,
+		aZ: impl.aZ
 	});
 }
 
@@ -4174,17 +4174,17 @@ var _Browser_decodeEvent = F2(function(decoder, event)
 function _Browser_visibilityInfo()
 {
 	return (typeof _VirtualDom_doc.hidden !== 'undefined')
-		? { aK: 'hidden', D: 'visibilitychange' }
+		? { aI: 'hidden', C: 'visibilitychange' }
 		:
 	(typeof _VirtualDom_doc.mozHidden !== 'undefined')
-		? { aK: 'mozHidden', D: 'mozvisibilitychange' }
+		? { aI: 'mozHidden', C: 'mozvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.msHidden !== 'undefined')
-		? { aK: 'msHidden', D: 'msvisibilitychange' }
+		? { aI: 'msHidden', C: 'msvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.webkitHidden !== 'undefined')
-		? { aK: 'webkitHidden', D: 'webkitvisibilitychange' }
-		: { aK: 'hidden', D: 'visibilitychange' };
+		? { aI: 'webkitHidden', C: 'webkitvisibilitychange' }
+		: { aI: 'hidden', C: 'visibilitychange' };
 }
 
 
@@ -4265,12 +4265,12 @@ var _Browser_call = F2(function(functionName, id)
 function _Browser_getViewport()
 {
 	return {
-		ar: _Browser_getScene(),
-		av: {
-			L: _Browser_window.pageXOffset,
-			M: _Browser_window.pageYOffset,
-			B: _Browser_doc.documentElement.clientWidth,
-			u: _Browser_doc.documentElement.clientHeight
+		ap: _Browser_getScene(),
+		au: {
+			K: _Browser_window.pageXOffset,
+			L: _Browser_window.pageYOffset,
+			A: _Browser_doc.documentElement.clientWidth,
+			v: _Browser_doc.documentElement.clientHeight
 		}
 	};
 }
@@ -4280,8 +4280,8 @@ function _Browser_getScene()
 	var body = _Browser_doc.body;
 	var elem = _Browser_doc.documentElement;
 	return {
-		B: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
-		u: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
+		A: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
+		v: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
 	};
 }
 
@@ -4304,15 +4304,15 @@ function _Browser_getViewportOf(id)
 	return _Browser_withNode(id, function(node)
 	{
 		return {
-			ar: {
-				B: node.scrollWidth,
-				u: node.scrollHeight
+			ap: {
+				A: node.scrollWidth,
+				v: node.scrollHeight
 			},
-			av: {
-				L: node.scrollLeft,
-				M: node.scrollTop,
-				B: node.clientWidth,
-				u: node.clientHeight
+			au: {
+				K: node.scrollLeft,
+				L: node.scrollTop,
+				A: node.clientWidth,
+				v: node.clientHeight
 			}
 		};
 	});
@@ -4342,18 +4342,18 @@ function _Browser_getElement(id)
 		var x = _Browser_window.pageXOffset;
 		var y = _Browser_window.pageYOffset;
 		return {
-			ar: _Browser_getScene(),
-			av: {
-				L: x,
-				M: y,
-				B: _Browser_doc.documentElement.clientWidth,
-				u: _Browser_doc.documentElement.clientHeight
+			ap: _Browser_getScene(),
+			au: {
+				K: x,
+				L: y,
+				A: _Browser_doc.documentElement.clientWidth,
+				v: _Browser_doc.documentElement.clientHeight
 			},
-			aF: {
-				L: x + rect.left,
-				M: y + rect.top,
-				B: rect.width,
-				u: rect.height
+			aE: {
+				K: x + rect.left,
+				L: y + rect.top,
+				A: rect.width,
+				v: rect.height
 			}
 		};
 	});
@@ -4388,6 +4388,7 @@ function _Browser_load(url)
 		}
 	}));
 }
+var author$project$ClientTypes$Loaded = {$: 1};
 var elm$core$Elm$JsArray$foldr = _JsArray_foldr;
 var elm$core$Array$foldr = F3(
 	function (func, baseCase, _n0) {
@@ -4504,22 +4505,15 @@ var elm$core$Dict$get = F2(
 			}
 		}
 	});
-var wernerdegroot$listzipper$List$Zipper$Zipper = F3(
-	function (a, b, c) {
-		return {$: 0, a: a, b: b, c: c};
-	});
-var wernerdegroot$listzipper$List$Zipper$singleton = function (x) {
-	return A3(wernerdegroot$listzipper$List$Zipper$Zipper, _List_Nil, x, _List_Nil);
-};
 var author$project$Components$getNarrative = function (_n0) {
 	var id = _n0.a;
 	var components = _n0.b;
 	var _n1 = A2(elm$core$Dict$get, 'narrative', components);
-	if ((!_n1.$) && (_n1.a.$ === 3)) {
+	if ((!_n1.$) && (_n1.a.$ === 4)) {
 		var narrative = _n1.a.a;
 		return narrative;
 	} else {
-		return wernerdegroot$listzipper$List$Zipper$singleton(id);
+		return id;
 	}
 };
 var jschomay$elm_narrative_engine$Types$With = function (a) {
@@ -4532,23 +4526,19 @@ var author$project$Components$getRuleData = function (_n0) {
 	var id = _n0.a;
 	var components = _n0.b;
 	var _n1 = A2(elm$core$Dict$get, 'ruleData', components);
-	if ((!_n1.$) && (_n1.a.$ === 4)) {
+	if ((!_n1.$) && (_n1.a.$ === 5)) {
 		var rule = _n1.a.a;
 		return rule;
 	} else {
 		return {
-			aA: _List_Nil,
-			aD: _List_Nil,
-			aP: jschomay$elm_narrative_engine$Engine$with('')
+			az: _List_Nil,
+			aC: _List_Nil,
+			aN: jschomay$elm_narrative_engine$Engine$with('')
 		};
 	}
 };
-var elm$core$Basics$identity = function (x) {
-	return x;
-};
-var author$project$Main$speak = _Platform_outgoingPort('speak', elm$core$Basics$identity);
-var author$project$Components$DisplayInformation = function (a) {
-	return {$: 0, a: a};
+var author$project$Components$Image = function (a) {
+	return {$: 1, a: a};
 };
 var elm$core$Dict$Black = 1;
 var elm$core$Dict$RBNode_elm_builtin = F5(
@@ -4671,14 +4661,21 @@ var elm$core$Basics$apL = F2(
 	function (f, x) {
 		return f(x);
 	});
-var author$project$Components$addDisplayInfo = F2(
-	function (name, description) {
-		return A2(
-			author$project$Components$addComponent,
-			'displayInfo',
-			author$project$Components$DisplayInformation(
-				{Y: description, af: name}));
-	});
+var author$project$Components$addImage = function (url) {
+	return A2(
+		author$project$Components$addComponent,
+		'image',
+		author$project$Components$Image(url));
+};
+var author$project$Components$Name = function (a) {
+	return {$: 0, a: a};
+};
+var author$project$Components$addName = function (name) {
+	return A2(
+		author$project$Components$addComponent,
+		'name',
+		author$project$Components$Name(name));
+};
 var elm$core$Dict$empty = elm$core$Dict$RBEmpty_elm_builtin;
 var author$project$Components$entity = function (id) {
 	return _Utils_Tuple2(id, elm$core$Dict$empty);
@@ -4689,202 +4686,60 @@ var elm$core$Basics$apR = F2(
 	});
 var author$project$Manifest$characters = _List_fromArray(
 	[
-		A3(
-		author$project$Components$addDisplayInfo,
-		'Little Red Riding Hood',
-		'Sweet and innocent, she spent her days playing around her cottage where she lived with her mother.',
-		author$project$Components$entity('lrrh')),
-		A3(
-		author$project$Components$addDisplayInfo,
-		'Mother',
-		'Little Red Riding Hood\'s mother, who looks after her.',
-		author$project$Components$entity('mother')),
-		A3(
-		author$project$Components$addDisplayInfo,
-		'Wolf',
-		'A very sly and clever wolf, who lives in the woods.',
-		author$project$Components$entity('wolf')),
-		A3(
-		author$project$Components$addDisplayInfo,
-		'Grandma',
-		'Little Red Riding Hood\'s grandmother, who lives alone in a cottage in the woods.',
-		author$project$Components$entity('grandma'))
+		A2(
+		author$project$Components$addImage,
+		'/img/giraffe.png',
+		A2(
+			author$project$Components$addName,
+			'Jarald the Giraffe',
+			author$project$Components$entity('jarald'))),
+		A2(
+		author$project$Components$addImage,
+		'/img/panda.png',
+		A2(
+			author$project$Components$addName,
+			'Tenzin the Panda',
+			author$project$Components$entity('tenzin')))
 	]);
 var author$project$Manifest$items = _List_fromArray(
 	[
-		A3(
-		author$project$Components$addDisplayInfo,
-		'Cape',
-		'Little Red Riding Hood\'s namesake.',
-		author$project$Components$entity('cape')),
-		A3(
-		author$project$Components$addDisplayInfo,
-		'Basket of food',
-		'Some goodies to take to Grandma.',
-		author$project$Components$entity('basket'))
+		author$project$Components$entity('next')
 	]);
-var author$project$Components$East = 2;
-var author$project$Components$West = 3;
-var author$project$Components$ClassName = function (a) {
-	return {$: 1, a: a};
-};
-var author$project$Components$addClassName = function (className) {
-	return A2(
-		author$project$Components$addComponent,
-		'className',
-		author$project$Components$ClassName(className));
-};
-var author$project$Components$ConnectingLocations = function (a) {
-	return {$: 2, a: a};
-};
-var author$project$Components$addConnectingLocations = function (exits) {
-	return A2(
-		author$project$Components$addComponent,
-		'connectedLocations',
-		author$project$Components$ConnectingLocations(exits));
-};
 var author$project$Manifest$locations = _List_fromArray(
 	[
 		A2(
-		author$project$Components$addClassName,
-		'cottage',
+		author$project$Components$addImage,
+		'/img/forest.png',
 		A2(
-			author$project$Components$addConnectingLocations,
-			_List_fromArray(
-				[
-					_Utils_Tuple2(2, 'river')
-				]),
-			A3(
-				author$project$Components$addDisplayInfo,
-				'Cottage',
-				'The cottage where Little Red Riding Hood and her mother live.',
-				author$project$Components$entity('cottage')))),
+			author$project$Components$addName,
+			'The Forest',
+			author$project$Components$entity('forest'))),
 		A2(
-		author$project$Components$addClassName,
-		'river',
+		author$project$Components$addImage,
+		'/img/castle.png',
 		A2(
-			author$project$Components$addConnectingLocations,
-			_List_fromArray(
-				[
-					_Utils_Tuple2(3, 'cottage'),
-					_Utils_Tuple2(2, 'woods')
-				]),
-			A3(
-				author$project$Components$addDisplayInfo,
-				'River',
-				'A river that runs by Little Red Riding Hood\'s cottage.',
-				author$project$Components$entity('river')))),
-		A2(
-		author$project$Components$addClassName,
-		'woods',
-		A2(
-			author$project$Components$addConnectingLocations,
-			_List_fromArray(
-				[
-					_Utils_Tuple2(3, 'river'),
-					_Utils_Tuple2(2, 'grandmasHouse')
-				]),
-			A3(
-				author$project$Components$addDisplayInfo,
-				'Woods',
-				'The forests that surround Little Red Riding Hood\'s cottage.',
-				author$project$Components$entity('woods')))),
-		A2(
-		author$project$Components$addClassName,
-		'grandmasHouse',
-		A3(
-			author$project$Components$addDisplayInfo,
-			'Grandma\'s house',
-			'The cabin in the woods where Grandma lives alone.',
-			author$project$Components$entity('grandmasHouse')))
+			author$project$Components$addName,
+			'The Castle',
+			author$project$Components$entity('castle')))
 	]);
-var author$project$Narrative$startingNarrative = {aN: 'opening', aO: 'Once upon a time...', aU: 'Once upon a time there was a young girl named Little Red Riding Hood, because she was so fond of her red cape that her grandma gave to her.\n\nOne day, her mother said to her, "Little Red Riding Hood, take this basket of food to your Grandma, who lives in the woods, because she is not feeling well.  And remember, don\'t talk to strangers on the way!"\n'};
-var author$project$Narrative$confusedByWolf = _List_fromArray(
-	['Little Red Riding Hood knew that something was different about Grandma, but she shouldn\'t quite put her finger on it.']);
-var author$project$Narrative$crossingTheRiver = _List_fromArray(
-	['Little Red Riding Hood loved to be outside, although her mother usually forbade her to go past the old bridge that went over the river.  But today she pressed on.', 'Little Red Riding Hood was eager to see her Grandma.']);
-var author$project$Narrative$dallying = _List_fromArray(
-	['Shouldn\'t keep Grandma waiting.']);
-var author$project$Narrative$demise = _List_fromArray(
-	['\n"Grandma, what big eyes you have."\n\n"The better to see you with, my dear," said the wolf, as softly as he could.\n', '\n"And Grandma, what big ears you have."\n\n"The better to hear you with, my dear."\n', '\n"And Grandma, what big teeth you have!"\n\n"The better to gobble you up with!"  And the wolf jumped out of bed and that is exactly what he did.  And that is why we don\'t talk to strangers.\n']);
-var author$project$Narrative$enteringWoods = _List_fromArray(
-	['\nLittle Red Riding Hood followed the path deep into the woods.  Birds chirped in the trees high above, and squirrels scampered up the trunks, looking for nuts.\n\nAt first, Little Red Riding Hood did not see the wolf spying on her in the shadows, looking at her basket of food and licking his chops.  He was a crafty wolf, and came up with a plan.\n\nPutting on his best smile, the wolf greeted Little Red Riding Hood.\n\n"Good morning my pretty child.  What a lovely cape you have on.  May I ask, where are you going with that delicious looking basket of food?"\n\n![](img/meet-wolf.jpg)\n                ']);
-var author$project$Narrative$excitedToVisitGrandma = _List_fromArray(
-	['Little Red Riding Hood always enjoyed visiting her Grandma, and was excited to see her again.']);
-var author$project$Narrative$findWolfAtGrandmas = _List_fromArray(
-	['\nLittle Red Riding Hood found the door to Grandma\'s house unlocked, so she went in.  She saw Grandma sleeping in the bed with the covers pulled high over her face, and her nightcap pulled low over her forehead.\nBut she looked a little different than usual.\n\nLittle Red Riding Hood did not know that the wolf had ran to Grandma\'s house before her, and eaten Grandma up, and was now lying in her bed pretending to be Grandma!\n\n![](img/wolf-as-grandma.jpg)\n']);
-var author$project$Narrative$forgettingBasket = _List_fromArray(
-	['Little Red Riding Hood was so focused on her Grandma that she forgot all about the basket of food.']);
-var author$project$Narrative$happyToSeeGrandma = _List_fromArray(
-	['Little Red Riding Hood was happy to see her Grandma again.']);
-var author$project$Narrative$ignoreWolf = _List_fromArray(
-	['\nLittle Red Riding Hood remembered her mother\'s warning about not talking to strangers, and hurried away to Grandma\'s house.\n\nGrandma was so happy to see Little Red Riding Hood.\n']);
-var author$project$Narrative$inTheWoods = _List_fromArray(
-	['Little Red Riding Hood felt slightly afraid in the dark woods.', 'She seemed very small amongst the tall trees.', 'She couldn\'t wait to safely get to her Grandma\'s house.']);
-var author$project$Narrative$leavingCottage = _List_fromArray(
-	['\nLittle Red Riding Hood skipped out of the cottage, singing a happy song and swinging the basket of food by her side.  Soon she arrived at the old bridge that went over the river.\n\nOn the other side of the bridge were the woods where Grandma lived.\n']);
-var author$project$Narrative$leavingWithoutBasket = _List_fromArray(
-	['\n "Oh Little Red Riding Hood," her mother called out, "don\'t forget the basket of food to bring to Grandma!"\n']);
-var author$project$Narrative$leavingWithoutCape = _List_fromArray(
-	['\n"Oh Little Red Riding Hood," her mother called out, "don\'t forget your cape.  It might be cold in the woods."\n']);
-var author$project$Narrative$realizingMistake = _List_fromArray(
-	['Only then did Little Red Riding Hood remember her mother\'s warning about not talking to strangers.  That couldn\'t have done any harm, could it?']);
-var author$project$Narrative$returningToCottage = _List_fromArray(
-	['\nLittle Red Riding Hood knew that her mother would be cross if she did not bring the basket of food to Grandma.\n']);
-var author$project$Narrative$returningToRiver = _List_fromArray(
-	['\nGrandma\'s house is the other direction.\n', '\nThe wolf was still there, trying to hide the hungry look in his eye.\n']);
-var author$project$Narrative$sharingFoodWithGrandma = _List_fromArray(
-	['\nLittle Red Riding Hood hefted the basket of food onto her grandma\'s bed.  "Grandma, look at all of this nice food I brought you!"\n\n"Oh, you are such a good little girl!  Thank you."\n\nAnd together they ate the goodies she had brought, and everyone lived happily ever after.\n\n![](img/grandma.jpg)\n ']);
-var author$project$Narrative$shivering = _List_fromArray(
-	['A shiver passed through her body, even though she was wrapped in her warm cape.']);
-var author$project$Narrative$surprisedByWolf = _List_fromArray(
-	['At first the wolf startled her, but he seemed so friendly that she soon relaxed.', 'Grandma\'s house wasn\'t far, but it would be rude to ignore the wolf, wouldn\'t it?']);
-var author$project$Narrative$takeBasket = _List_fromArray(
-	['Little Red Riding Hood took the nice basket that her mother had prepared.  It was full of delicious food and cakes and even a little wine.']);
-var author$project$Narrative$takeCape = _List_fromArray(
-	['Little Red Riding Hood eagerly put on her red cape.']);
-var author$project$Narrative$talkToMother = _List_fromArray(
-	['\"Don\'t keep Grandma waiting.\"', '\"Remember, don\'t talk to strangers.\"', '\"Hurry along Little Red Riding Hood.\"']);
-var author$project$Narrative$talkToWolf = _List_fromArray(
-	['\nLittle Red Riding Hood thought the wolf looked so kind and so friendly that she happily told him, "I\'m going to visit Grandma, who lives in these woods.  She isn\'t feeling well, so I am bringing her a basket of food."\n\nThe wolf muttered "That\'s very interesting.  I hope she feels better soon."\n\nThen he smiled a crafty smile and dashed off into the woods.\n\nLittle Red Riding Hood thought that seemed a little unusual.\n']);
+var author$project$Narrative$startingNarrative = {aL: 'opening', aM: '', aT: 'Once upon a time there was a peaceful forest...'};
+var author$project$Narrative$storyTitle = 'How Jarald and Tenzin Met';
+var author$project$Narrative$entersClearing = ' "Wow" they both said.\n\n"Should we go inside?" ask Tenzin with much excitement.\n\n"Last one there cooks dinner" Jarald yelled as he took a head start.\n';
+var author$project$Narrative$jaraldHearsASounds = 'A giraffe named Jarald was walking through that forest on his way to a mightly castle.\n\nJust when everything seems calm Jarald heard a noise. "What was that" cried Jarald.';
+var author$project$Narrative$tenzinIntro = ' "It\'s only me!" said tenzin. \n\n"Why are you always so scared?"\n';
+var author$project$Narrative$theEnd = 'To Be Continued...';
+var author$project$Narrative$throughTheClearing = ' "Don\'t scare me like that Tenzin" said jarald. \n\nHe look we are almost there.\n';
 var author$project$Components$Narrative = function (a) {
-	return {$: 3, a: a};
-};
-var wernerdegroot$listzipper$List$Zipper$fromList = function (xs) {
-	if (!xs.b) {
-		return elm$core$Maybe$Nothing;
-	} else {
-		var y = xs.a;
-		var ys = xs.b;
-		return elm$core$Maybe$Just(
-			A3(wernerdegroot$listzipper$List$Zipper$Zipper, _List_Nil, y, ys));
-	}
-};
-var elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (!maybe.$) {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
-var wernerdegroot$listzipper$List$Zipper$withDefault = function (x) {
-	return elm$core$Maybe$withDefault(
-		wernerdegroot$listzipper$List$Zipper$singleton(x));
+	return {$: 4, a: a};
 };
 var author$project$Components$addNarrative = function (narrative) {
 	return A2(
 		author$project$Components$addComponent,
 		'narrative',
-		author$project$Components$Narrative(
-			A2(
-				wernerdegroot$listzipper$List$Zipper$withDefault,
-				'',
-				wernerdegroot$listzipper$List$Zipper$fromList(narrative))));
+		author$project$Components$Narrative(narrative));
 };
 var author$project$Components$RuleData = function (a) {
-	return {$: 4, a: a};
+	return {$: 5, a: a};
 };
 var author$project$Components$addRuleData = function (ruleData) {
 	return A2(
@@ -4902,7 +4757,6 @@ var author$project$Rules$rule = F3(
 				ruleData,
 				author$project$Components$entity(id)));
 	});
-var elm$core$Basics$append = _Utils_append;
 var elm$core$List$foldl = F3(
 	function (func, acc, list) {
 		foldl:
@@ -4939,37 +4793,15 @@ var jschomay$elm_narrative_engine$Types$CharacterIsInLocation = F2(
 		return {$: 1, a: a, b: b};
 	});
 var jschomay$elm_narrative_engine$Engine$characterIsInLocation = jschomay$elm_narrative_engine$Types$CharacterIsInLocation;
+var jschomay$elm_narrative_engine$Types$CharacterIsNotInLocation = F2(
+	function (a, b) {
+		return {$: 2, a: a, b: b};
+	});
+var jschomay$elm_narrative_engine$Engine$characterIsNotInLocation = jschomay$elm_narrative_engine$Types$CharacterIsNotInLocation;
 var jschomay$elm_narrative_engine$Types$CurrentLocationIs = function (a) {
 	return {$: 3, a: a};
 };
 var jschomay$elm_narrative_engine$Engine$currentLocationIs = jschomay$elm_narrative_engine$Types$CurrentLocationIs;
-var jschomay$elm_narrative_engine$Types$CurrentLocationIsNot = function (a) {
-	return {$: 4, a: a};
-};
-var jschomay$elm_narrative_engine$Engine$currentLocationIsNot = jschomay$elm_narrative_engine$Types$CurrentLocationIsNot;
-var jschomay$elm_narrative_engine$Types$EndStory = function (a) {
-	return {$: 10, a: a};
-};
-var jschomay$elm_narrative_engine$Engine$endStory = function (ending) {
-	return jschomay$elm_narrative_engine$Types$EndStory(ending);
-};
-var jschomay$elm_narrative_engine$Types$HasNotPreviouslyInteractedWith = function (a) {
-	return {$: 9, a: a};
-};
-var jschomay$elm_narrative_engine$Engine$hasNotPreviouslyInteractedWith = jschomay$elm_narrative_engine$Types$HasNotPreviouslyInteractedWith;
-var jschomay$elm_narrative_engine$Types$ItemIsInInventory = function (a) {
-	return {$: 0, a: a};
-};
-var jschomay$elm_narrative_engine$Engine$itemIsInInventory = jschomay$elm_narrative_engine$Types$ItemIsInInventory;
-var jschomay$elm_narrative_engine$Types$ItemIsInLocation = F2(
-	function (a, b) {
-		return {$: 5, a: a, b: b};
-	});
-var jschomay$elm_narrative_engine$Engine$itemIsInLocation = jschomay$elm_narrative_engine$Types$ItemIsInLocation;
-var jschomay$elm_narrative_engine$Types$ItemIsNotInInventory = function (a) {
-	return {$: 6, a: a};
-};
-var jschomay$elm_narrative_engine$Engine$itemIsNotInInventory = jschomay$elm_narrative_engine$Types$ItemIsNotInInventory;
 var jschomay$elm_narrative_engine$Types$MoveCharacterOffScreen = function (a) {
 	return {$: 8, a: a};
 };
@@ -4979,409 +4811,105 @@ var jschomay$elm_narrative_engine$Types$MoveCharacterToLocation = F2(
 		return {$: 7, a: a, b: b};
 	});
 var jschomay$elm_narrative_engine$Engine$moveCharacterToLocation = jschomay$elm_narrative_engine$Types$MoveCharacterToLocation;
-var jschomay$elm_narrative_engine$Types$MoveItemToInventory = function (a) {
-	return {$: 5, a: a};
+var jschomay$elm_narrative_engine$Types$MoveItemOffScreen = function (a) {
+	return {$: 6, a: a};
 };
-var jschomay$elm_narrative_engine$Engine$moveItemToInventory = jschomay$elm_narrative_engine$Types$MoveItemToInventory;
+var jschomay$elm_narrative_engine$Engine$moveItemOffScreen = jschomay$elm_narrative_engine$Types$MoveItemOffScreen;
 var jschomay$elm_narrative_engine$Types$MoveTo = function (a) {
 	return {$: 0, a: a};
 };
 var jschomay$elm_narrative_engine$Engine$moveTo = jschomay$elm_narrative_engine$Types$MoveTo;
 var author$project$Rules$rules = elm$core$Dict$fromList(
-	_Utils_ap(
-		_List_Nil,
-		_Utils_ap(
-			_List_fromArray(
-				[
-					A3(
-					author$project$Rules$rule,
-					'going back to the Cottage',
-					{
-						aA: _List_Nil,
-						aD: _List_fromArray(
-							[
-								jschomay$elm_narrative_engine$Engine$currentLocationIsNot('cottage')
-							]),
-						aP: jschomay$elm_narrative_engine$Engine$with('cottage')
-					},
-					author$project$Narrative$returningToCottage)
-				]),
-			_Utils_ap(
-				_List_fromArray(
+	_List_fromArray(
+		[
+			A3(
+			author$project$Rules$rule,
+			'entering the forest',
+			{
+				az: _List_fromArray(
 					[
-						A3(
-						author$project$Rules$rule,
-						'ignoring the wolf',
-						{
-							aA: _List_fromArray(
-								[
-									jschomay$elm_narrative_engine$Engine$moveTo('grandmasHouse'),
-									A2(jschomay$elm_narrative_engine$Engine$moveCharacterToLocation, 'lrrh', 'grandmasHouse')
-								]),
-							aD: _List_fromArray(
-								[
-									jschomay$elm_narrative_engine$Engine$currentLocationIs('woods'),
-									jschomay$elm_narrative_engine$Engine$hasNotPreviouslyInteractedWith('wolf')
-								]),
-							aP: jschomay$elm_narrative_engine$Engine$with('grandmasHouse')
-						},
-						author$project$Narrative$ignoreWolf),
-						A3(
-						author$project$Rules$rule,
-						'finding the wolf at Grandma\'s house',
-						{
-							aA: _List_fromArray(
-								[
-									jschomay$elm_narrative_engine$Engine$moveTo('grandmasHouse'),
-									A2(jschomay$elm_narrative_engine$Engine$moveCharacterToLocation, 'lrrh', 'grandmasHouse')
-								]),
-							aD: _List_fromArray(
-								[
-									jschomay$elm_narrative_engine$Engine$currentLocationIs('woods'),
-									A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'wolf', 'grandmasHouse')
-								]),
-							aP: jschomay$elm_narrative_engine$Engine$with('grandmasHouse')
-						},
-						author$project$Narrative$findWolfAtGrandmas)
+						A2(jschomay$elm_narrative_engine$Engine$moveCharacterToLocation, 'jarald', 'forest')
 					]),
-				_Utils_ap(
-					_List_fromArray(
-						[
-							A3(
-							author$project$Rules$rule,
-							'entering the Woods',
-							{
-								aA: _List_fromArray(
-									[
-										jschomay$elm_narrative_engine$Engine$moveTo('woods'),
-										A2(jschomay$elm_narrative_engine$Engine$moveCharacterToLocation, 'lrrh', 'woods')
-									]),
-								aD: _List_fromArray(
-									[
-										jschomay$elm_narrative_engine$Engine$currentLocationIs('river'),
-										A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'wolf', 'woods')
-									]),
-								aP: jschomay$elm_narrative_engine$Engine$with('woods')
-							},
-							author$project$Narrative$enteringWoods)
-						]),
-					_Utils_ap(
-						_List_fromArray(
-							[
-								A3(
-								author$project$Rules$rule,
-								'leaving cottage without cape',
-								{
-									aA: _List_Nil,
-									aD: _List_fromArray(
-										[
-											jschomay$elm_narrative_engine$Engine$currentLocationIs('cottage'),
-											jschomay$elm_narrative_engine$Engine$itemIsNotInInventory('cape')
-										]),
-									aP: jschomay$elm_narrative_engine$Engine$with('river')
-								},
-								author$project$Narrative$leavingWithoutCape),
-								A3(
-								author$project$Rules$rule,
-								'leaving cottage without basket',
-								{
-									aA: _List_Nil,
-									aD: _List_fromArray(
-										[
-											jschomay$elm_narrative_engine$Engine$currentLocationIs('cottage'),
-											jschomay$elm_narrative_engine$Engine$itemIsNotInInventory('basket')
-										]),
-									aP: jschomay$elm_narrative_engine$Engine$with('river')
-								},
-								author$project$Narrative$leavingWithoutBasket),
-								A3(
-								author$project$Rules$rule,
-								'leaving the Cottage',
-								{
-									aA: _List_fromArray(
-										[
-											jschomay$elm_narrative_engine$Engine$moveTo('river'),
-											A2(jschomay$elm_narrative_engine$Engine$moveCharacterToLocation, 'lrrh', 'river')
-										]),
-									aD: _List_fromArray(
-										[
-											jschomay$elm_narrative_engine$Engine$currentLocationIs('cottage'),
-											jschomay$elm_narrative_engine$Engine$itemIsInInventory('cape'),
-											jschomay$elm_narrative_engine$Engine$itemIsInInventory('basket')
-										]),
-									aP: jschomay$elm_narrative_engine$Engine$with('river')
-								},
-								author$project$Narrative$leavingCottage),
-								A3(
-								author$project$Rules$rule,
-								'going from Woods to River',
-								{
-									aA: _List_Nil,
-									aD: _List_fromArray(
-										[
-											jschomay$elm_narrative_engine$Engine$currentLocationIs('woods'),
-											jschomay$elm_narrative_engine$Engine$itemIsInInventory('cape'),
-											jschomay$elm_narrative_engine$Engine$itemIsInInventory('basket')
-										]),
-									aP: jschomay$elm_narrative_engine$Engine$with('river')
-								},
-								author$project$Narrative$returningToRiver)
-							]),
-						_Utils_ap(
-							_List_fromArray(
-								[
-									A3(
-									author$project$Rules$rule,
-									'talking to the wolf in the Woods',
-									{
-										aA: _List_fromArray(
-											[
-												A2(jschomay$elm_narrative_engine$Engine$moveCharacterToLocation, 'wolf', 'grandmasHouse'),
-												jschomay$elm_narrative_engine$Engine$moveCharacterOffScreen('grandma')
-											]),
-										aD: _List_fromArray(
-											[
-												jschomay$elm_narrative_engine$Engine$currentLocationIs('woods'),
-												A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'wolf', 'woods')
-											]),
-										aP: jschomay$elm_narrative_engine$Engine$with('wolf')
-									},
-									author$project$Narrative$talkToWolf),
-									A3(
-									author$project$Rules$rule,
-									'Little Red Riding Hood\'s demise',
-									{
-										aA: _List_Nil,
-										aD: _List_fromArray(
-											[
-												jschomay$elm_narrative_engine$Engine$currentLocationIs('grandmasHouse'),
-												A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'lrrh', 'grandmasHouse'),
-												A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'wolf', 'grandmasHouse')
-											]),
-										aP: jschomay$elm_narrative_engine$Engine$with('wolf')
-									},
-									author$project$Narrative$demise)
-								]),
-							_Utils_ap(
-								_List_fromArray(
-									[
-										A3(
-										author$project$Rules$rule,
-										'further talking to mother',
-										{
-											aA: _List_Nil,
-											aD: _List_Nil,
-											aP: jschomay$elm_narrative_engine$Engine$with('mother')
-										},
-										author$project$Narrative$talkToMother)
-									]),
-								_Utils_ap(
-									_List_fromArray(
-										[
-											A3(
-											author$project$Rules$rule,
-											'sharing food with grandma',
-											{
-												aA: _List_fromArray(
-													[
-														jschomay$elm_narrative_engine$Engine$endStory('The End')
-													]),
-												aD: _List_fromArray(
-													[
-														A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'lrrh', 'grandmasHouse'),
-														A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'grandma', 'grandmasHouse'),
-														jschomay$elm_narrative_engine$Engine$itemIsInInventory('basket')
-													]),
-												aP: jschomay$elm_narrative_engine$Engine$with('grandma')
-											},
-											author$project$Narrative$sharingFoodWithGrandma)
-										]),
-									_Utils_ap(
-										_List_fromArray(
-											[
-												A3(
-												author$project$Rules$rule,
-												'excited to visit grandma',
-												{
-													aA: _List_Nil,
-													aD: _List_fromArray(
-														[
-															A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'lrrh', 'cottage')
-														]),
-													aP: jschomay$elm_narrative_engine$Engine$with('lrrh')
-												},
-												author$project$Narrative$excitedToVisitGrandma),
-												A3(
-												author$project$Rules$rule,
-												'dallying',
-												{
-													aA: _List_Nil,
-													aD: _List_fromArray(
-														[
-															A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'lrrh', 'cottage'),
-															jschomay$elm_narrative_engine$Engine$itemIsInInventory('basket'),
-															jschomay$elm_narrative_engine$Engine$itemIsInInventory('cape')
-														]),
-													aP: jschomay$elm_narrative_engine$Engine$with('lrrh')
-												},
-												author$project$Narrative$dallying),
-												A3(
-												author$project$Rules$rule,
-												'crossing the river',
-												{
-													aA: _List_Nil,
-													aD: _List_fromArray(
-														[
-															A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'lrrh', 'river')
-														]),
-													aP: jschomay$elm_narrative_engine$Engine$with('lrrh')
-												},
-												author$project$Narrative$crossingTheRiver),
-												A3(
-												author$project$Rules$rule,
-												'in the woods',
-												{
-													aA: _List_Nil,
-													aD: _List_fromArray(
-														[
-															A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'lrrh', 'woods')
-														]),
-													aP: jschomay$elm_narrative_engine$Engine$with('lrrh')
-												},
-												author$project$Narrative$inTheWoods),
-												A3(
-												author$project$Rules$rule,
-												'surprised by the wolf',
-												{
-													aA: _List_Nil,
-													aD: _List_fromArray(
-														[
-															A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'lrrh', 'woods'),
-															A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'wolf', 'woods')
-														]),
-													aP: jschomay$elm_narrative_engine$Engine$with('lrrh')
-												},
-												author$project$Narrative$surprisedByWolf),
-												A3(
-												author$project$Rules$rule,
-												'realizing her mistake',
-												{
-													aA: _List_Nil,
-													aD: _List_fromArray(
-														[
-															A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'lrrh', 'woods'),
-															A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'wolf', 'grandmasHouse')
-														]),
-													aP: jschomay$elm_narrative_engine$Engine$with('lrrh')
-												},
-												author$project$Narrative$realizingMistake),
-												A3(
-												author$project$Rules$rule,
-												'happy to see Grandma',
-												{
-													aA: _List_Nil,
-													aD: _List_fromArray(
-														[
-															A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'lrrh', 'grandmasHouse'),
-															A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'grandma', 'grandmasHouse')
-														]),
-													aP: jschomay$elm_narrative_engine$Engine$with('lrrh')
-												},
-												author$project$Narrative$happyToSeeGrandma),
-												A3(
-												author$project$Rules$rule,
-												'confused by wolf in grandma\'s bed',
-												{
-													aA: _List_Nil,
-													aD: _List_fromArray(
-														[
-															A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'lrrh', 'grandmasHouse'),
-															A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'wolf', 'grandmasHouse')
-														]),
-													aP: jschomay$elm_narrative_engine$Engine$with('lrrh')
-												},
-												author$project$Narrative$confusedByWolf)
-											]),
-										_Utils_ap(
-											_List_fromArray(
-												[
-													A3(
-													author$project$Rules$rule,
-													'taking basket',
-													{
-														aA: _List_fromArray(
-															[
-																jschomay$elm_narrative_engine$Engine$moveItemToInventory('basket')
-															]),
-														aD: _List_fromArray(
-															[
-																A2(jschomay$elm_narrative_engine$Engine$itemIsInLocation, 'basket', 'cottage')
-															]),
-														aP: jschomay$elm_narrative_engine$Engine$with('basket')
-													},
-													author$project$Narrative$takeBasket),
-													A3(
-													author$project$Rules$rule,
-													'giving basket of food to grandma',
-													{
-														aA: _List_fromArray(
-															[
-																jschomay$elm_narrative_engine$Engine$endStory('The End')
-															]),
-														aD: _List_fromArray(
-															[
-																A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'lrrh', 'grandmasHouse'),
-																A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'grandma', 'grandmasHouse'),
-																jschomay$elm_narrative_engine$Engine$itemIsInInventory('basket')
-															]),
-														aP: jschomay$elm_narrative_engine$Engine$with('basket')
-													},
-													author$project$Narrative$sharingFoodWithGrandma),
-													A3(
-													author$project$Rules$rule,
-													'forgetting about the baseket',
-													{
-														aA: _List_Nil,
-														aD: _List_fromArray(
-															[
-																A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'lrrh', 'grandmasHouse'),
-																A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'wolf', 'grandmasHouse')
-															]),
-														aP: jschomay$elm_narrative_engine$Engine$with('basket')
-													},
-													author$project$Narrative$forgettingBasket)
-												]),
-											_List_fromArray(
-												[
-													A3(
-													author$project$Rules$rule,
-													'taking cape',
-													{
-														aA: _List_fromArray(
-															[
-																jschomay$elm_narrative_engine$Engine$moveItemToInventory('cape')
-															]),
-														aD: _List_fromArray(
-															[
-																A2(jschomay$elm_narrative_engine$Engine$itemIsInLocation, 'cape', 'cottage')
-															]),
-														aP: jschomay$elm_narrative_engine$Engine$with('cape')
-													},
-													author$project$Narrative$takeCape),
-													A3(
-													author$project$Rules$rule,
-													'shivering',
-													{
-														aA: _List_Nil,
-														aD: _List_fromArray(
-															[
-																A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'lrrh', 'grandmasHouse'),
-																A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'wolf', 'grandmasHouse')
-															]),
-														aP: jschomay$elm_narrative_engine$Engine$with('cape')
-													},
-													author$project$Narrative$shivering)
-												]))))))))))));
+				aC: _List_fromArray(
+					[
+						jschomay$elm_narrative_engine$Engine$currentLocationIs('forest'),
+						A2(jschomay$elm_narrative_engine$Engine$characterIsNotInLocation, 'jarald', 'forest')
+					]),
+				aN: jschomay$elm_narrative_engine$Engine$with('next')
+			},
+			author$project$Narrative$jaraldHearsASounds),
+			A3(
+			author$project$Rules$rule,
+			'Introduction to tenzin',
+			{
+				az: _List_fromArray(
+					[
+						A2(jschomay$elm_narrative_engine$Engine$moveCharacterToLocation, 'tenzin', 'forest'),
+						jschomay$elm_narrative_engine$Engine$moveCharacterOffScreen('jarald')
+					]),
+				aC: _List_fromArray(
+					[
+						jschomay$elm_narrative_engine$Engine$currentLocationIs('forest'),
+						A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'jarald', 'forest'),
+						A2(jschomay$elm_narrative_engine$Engine$characterIsNotInLocation, 'tenzin', 'forest')
+					]),
+				aN: jschomay$elm_narrative_engine$Engine$with('next')
+			},
+			author$project$Narrative$tenzinIntro),
+			A3(
+			author$project$Rules$rule,
+			'through the clearing',
+			{
+				az: _List_fromArray(
+					[
+						A2(jschomay$elm_narrative_engine$Engine$moveCharacterToLocation, 'jarald', 'forest')
+					]),
+				aC: _List_fromArray(
+					[
+						jschomay$elm_narrative_engine$Engine$currentLocationIs('forest'),
+						A2(jschomay$elm_narrative_engine$Engine$characterIsNotInLocation, 'jarald', 'forest'),
+						A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'tenzin', 'forest')
+					]),
+				aN: jschomay$elm_narrative_engine$Engine$with('next')
+			},
+			author$project$Narrative$throughTheClearing),
+			A3(
+			author$project$Rules$rule,
+			'enters clearing',
+			{
+				az: _List_fromArray(
+					[
+						A2(jschomay$elm_narrative_engine$Engine$moveCharacterToLocation, 'jarald', 'castle'),
+						A2(jschomay$elm_narrative_engine$Engine$moveCharacterToLocation, 'tenzin', 'castle'),
+						jschomay$elm_narrative_engine$Engine$moveTo('castle')
+					]),
+				aC: _List_fromArray(
+					[
+						jschomay$elm_narrative_engine$Engine$currentLocationIs('forest'),
+						A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'jarald', 'forest'),
+						A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'tenzin', 'forest')
+					]),
+				aN: jschomay$elm_narrative_engine$Engine$with('next')
+			},
+			author$project$Narrative$entersClearing),
+			A3(
+			author$project$Rules$rule,
+			'Ending',
+			{
+				az: _List_fromArray(
+					[
+						jschomay$elm_narrative_engine$Engine$moveItemOffScreen('next')
+					]),
+				aC: _List_fromArray(
+					[
+						jschomay$elm_narrative_engine$Engine$currentLocationIs('castle'),
+						A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'jarald', 'castle'),
+						A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'tenzin', 'castle')
+					]),
+				aN: jschomay$elm_narrative_engine$Engine$with('next')
+			},
+			author$project$Narrative$theEnd)
+		]));
 var jschomay$elm_narrative_engine$Types$MoveItemToLocation = F2(
 	function (a, b) {
 		return {$: 4, a: a, b: b};
@@ -5389,14 +4917,10 @@ var jschomay$elm_narrative_engine$Types$MoveItemToLocation = F2(
 var jschomay$elm_narrative_engine$Engine$moveItemToLocation = jschomay$elm_narrative_engine$Types$MoveItemToLocation;
 var author$project$Rules$startingState = _List_fromArray(
 	[
-		jschomay$elm_narrative_engine$Engine$moveTo('cottage'),
-		A2(jschomay$elm_narrative_engine$Engine$moveItemToLocation, 'cape', 'cottage'),
-		A2(jschomay$elm_narrative_engine$Engine$moveItemToLocation, 'basket', 'cottage'),
-		A2(jschomay$elm_narrative_engine$Engine$moveCharacterToLocation, 'lrrh', 'cottage'),
-		A2(jschomay$elm_narrative_engine$Engine$moveCharacterToLocation, 'mother', 'cottage'),
-		A2(jschomay$elm_narrative_engine$Engine$moveCharacterToLocation, 'wolf', 'woods'),
-		A2(jschomay$elm_narrative_engine$Engine$moveCharacterToLocation, 'grandma', 'grandmasHouse')
+		jschomay$elm_narrative_engine$Engine$moveTo('forest'),
+		A2(jschomay$elm_narrative_engine$Engine$moveItemToLocation, 'next', 'forest')
 	]);
+var elm$core$Basics$False = 1;
 var elm$core$Dict$map = F2(
 	function (func, dict) {
 		if (dict.$ === -2) {
@@ -5490,9 +5014,13 @@ var elm$core$List$map = F2(
 			_List_Nil,
 			xs);
 	});
-var elm$core$Tuple$first = function (_n0) {
-	var x = _n0.a;
-	return x;
+var elm$core$Basics$True = 0;
+var elm$core$Result$isOk = function (result) {
+	if (!result.$) {
+		return true;
+	} else {
+		return false;
+	}
 };
 var elm$core$Array$branchFactor = 32;
 var elm$core$Array$Array_elm_builtin = F4(
@@ -5540,6 +5068,10 @@ var elm$core$Array$compressNodes = F2(
 		}
 	});
 var elm$core$Basics$eq = _Utils_equal;
+var elm$core$Tuple$first = function (_n0) {
+	var x = _n0.a;
+	return x;
+};
 var elm$core$Array$treeFromBuilder = F2(
 	function (nodeList, nodeListSize) {
 		treeFromBuilder:
@@ -5587,7 +5119,6 @@ var elm$core$Array$builderToArray = F2(
 				builder.c);
 		}
 	});
-var elm$core$Basics$False = 1;
 var elm$core$Basics$idiv = _Basics_idiv;
 var elm$core$Basics$lt = _Utils_lt;
 var elm$core$Elm$JsArray$initialize = _JsArray_initialize;
@@ -5636,14 +5167,6 @@ var elm$core$Result$Err = function (a) {
 var elm$core$Result$Ok = function (a) {
 	return {$: 0, a: a};
 };
-var elm$core$Basics$True = 0;
-var elm$core$Result$isOk = function (result) {
-	if (!result.$) {
-		return true;
-	} else {
-		return false;
-	}
-};
 var elm$json$Json$Decode$Failure = F2(
 	function (a, b) {
 		return {$: 3, a: a, b: b};
@@ -5660,6 +5183,7 @@ var elm$json$Json$Decode$OneOf = function (a) {
 	return {$: 2, a: a};
 };
 var elm$core$Basics$and = _Basics_and;
+var elm$core$Basics$append = _Utils_append;
 var elm$core$Basics$or = _Basics_or;
 var elm$core$Char$toCode = _Char_toCode;
 var elm$core$Char$isLower = function (_char) {
@@ -5848,7 +5372,11 @@ var elm$json$Json$Decode$errorToStringHelp = F2(
 			}
 		}
 	});
-var elm$json$Json$Encode$string = _Json_wrap;
+var elm$core$Platform$Cmd$batch = _Platform_batch;
+var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
+var elm$core$Basics$identity = function (x) {
+	return x;
+};
 var jschomay$elm_narrative_engine$Engine$Model = elm$core$Basics$identity;
 var elm$core$Dict$getMin = function (dict) {
 	getMin:
@@ -6379,12 +5907,12 @@ var jschomay$elm_narrative_engine$Engine$changeWorld = F2(
 						var location = change.a;
 						return _Utils_update(
 							story_,
-							{aE: location});
+							{aD: location});
 					case 9:
 						var sceneName = change.a;
 						return _Utils_update(
 							story_,
-							{N: sceneName});
+							{M: sceneName});
 					case 10:
 						var ending = change.a;
 						return _Utils_update(
@@ -6406,9 +5934,9 @@ var jschomay$elm_narrative_engine$Engine$Manifest$character = jschomay$elm_narra
 var jschomay$elm_narrative_engine$Engine$Manifest$item = A2(jschomay$elm_narrative_engine$Types$Item, false, jschomay$elm_narrative_engine$Types$ItemOffScreen);
 var jschomay$elm_narrative_engine$Engine$Manifest$location = jschomay$elm_narrative_engine$Types$Location(false);
 var jschomay$elm_narrative_engine$Engine$Manifest$init = function (_n0) {
-	var items = _n0.aQ;
-	var locations = _n0.aT;
-	var characters = _n0.aB;
+	var items = _n0.aO;
+	var locations = _n0.aR;
+	var characters = _n0.aA;
 	var insertFn = F3(
 		function (interactableConstructor, id, acc) {
 			return A3(elm$core$Dict$insert, id, interactableConstructor, acc);
@@ -6434,11 +5962,11 @@ var jschomay$elm_narrative_engine$Engine$Manifest$init = function (_n0) {
 var jschomay$elm_narrative_engine$Engine$init = F2(
 	function (manifest, rules) {
 		return {
-			aE: '',
-			N: '',
+			aD: '',
+			M: '',
 			e: _List_Nil,
 			i: jschomay$elm_narrative_engine$Engine$Manifest$init(manifest),
-			aZ: rules,
+			aY: rules,
 			T: elm$core$Maybe$Nothing
 		};
 	});
@@ -6449,9 +5977,9 @@ var author$project$Main$init = function () {
 		A2(
 			jschomay$elm_narrative_engine$Engine$init,
 			{
-				aB: A2(elm$core$List$map, elm$core$Tuple$first, author$project$Manifest$characters),
-				aQ: A2(elm$core$List$map, elm$core$Tuple$first, author$project$Manifest$items),
-				aT: A2(elm$core$List$map, elm$core$Tuple$first, author$project$Manifest$locations)
+				aA: A2(elm$core$List$map, elm$core$Tuple$first, author$project$Manifest$characters),
+				aO: A2(elm$core$List$map, elm$core$Tuple$first, author$project$Manifest$items),
+				aR: A2(elm$core$List$map, elm$core$Tuple$first, author$project$Manifest$locations)
 			},
 			A2(
 				elm$core$Dict$map,
@@ -6463,9 +5991,9 @@ var author$project$Main$init = function () {
 				author$project$Rules$rules)));
 	return _Utils_Tuple2(
 		{
-			E: 0,
-			g: engineModel,
-			v: A2(
+			h: engineModel,
+			E: false,
+			O: A2(
 				elm$core$Dict$map,
 				F2(
 					function (k, v) {
@@ -6473,32 +6001,34 @@ var author$project$Main$init = function () {
 							_Utils_Tuple2(k, v));
 					}),
 				author$project$Rules$rules),
-			z: _List_fromArray(
-				[author$project$Narrative$startingNarrative])
+			s: _List_fromArray(
+				[author$project$Narrative$startingNarrative]),
+			at: author$project$Narrative$storyTitle
 		},
-		author$project$Main$speak(
-			elm$json$Json$Encode$string(author$project$Narrative$startingNarrative.aU)));
+		elm$core$Platform$Cmd$none);
 }();
+var elm$json$Json$Decode$bool = _Json_decodeBool;
+var author$project$Main$loaded = _Platform_incomingPort('loaded', elm$json$Json$Decode$bool);
 var author$project$Components$getClassName = function (_n0) {
 	var id = _n0.a;
 	var components = _n0.b;
-	var _n1 = A2(elm$core$Dict$get, 'className', components);
-	if ((!_n1.$) && (_n1.a.$ === 1)) {
+	var _n1 = A2(elm$core$Dict$get, 'classname', components);
+	if ((!_n1.$) && (_n1.a.$ === 3)) {
 		var className = _n1.a.a;
 		return className;
 	} else {
 		return '';
 	}
 };
-var author$project$Components$getDisplayInfo = function (_n0) {
+var author$project$Components$getName = function (_n0) {
 	var id = _n0.a;
 	var components = _n0.b;
-	var _n1 = A2(elm$core$Dict$get, 'displayInfo', components);
+	var _n1 = A2(elm$core$Dict$get, 'name', components);
 	if ((!_n1.$) && (!_n1.a.$)) {
-		var display = _n1.a.a;
-		return display;
+		var name = _n1.a.a;
+		return name;
 	} else {
-		return {Y: id, af: id};
+		return id;
 	}
 };
 var elm$core$Basics$composeR = F3(
@@ -6526,6 +6056,15 @@ var elm$core$List$head = function (list) {
 		return elm$core$Maybe$Nothing;
 	}
 };
+var elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (!maybe.$) {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
 var author$project$Main$findEntity = function (id) {
 	return A2(
 		elm$core$Maybe$withDefault,
@@ -6541,7 +6080,7 @@ var author$project$Main$findEntity = function (id) {
 					author$project$Manifest$items,
 					_Utils_ap(author$project$Manifest$locations, author$project$Manifest$characters)))));
 };
-var elm$core$Basics$neq = _Utils_notEqual;
+var author$project$Main$speak = _Platform_outgoingPort('speak', elm$core$Basics$identity);
 var elm$core$Maybe$andThen = F2(
 	function (callback, maybeValue) {
 		if (!maybeValue.$) {
@@ -6561,11 +6100,12 @@ var elm$core$Maybe$map = F2(
 			return elm$core$Maybe$Nothing;
 		}
 	});
-var elm$core$Platform$Cmd$batch = _Platform_batch;
-var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
-var jschomay$elm_narrative_engine$Engine$getEnding = function (_n0) {
-	var story = _n0;
-	return story.T;
+var elm$json$Json$Encode$string = _Json_wrap;
+var jschomay$elm_narrative_engine$Types$EndStory = function (a) {
+	return {$: 10, a: a};
+};
+var jschomay$elm_narrative_engine$Engine$endStory = function (ending) {
+	return jschomay$elm_narrative_engine$Types$EndStory(ending);
 };
 var elm$core$Tuple$second = function (_n0) {
 	var y = _n0.b;
@@ -6739,8 +6279,8 @@ var jschomay$elm_narrative_engine$Engine$Manifest$itemIsInLocation = F3(
 var jschomay$elm_narrative_engine$Engine$Rules$matchesCondition = F2(
 	function (_n0, condition) {
 		var history = _n0.e;
-		var currentLocation = _n0.aE;
-		var currentScene = _n0.N;
+		var currentLocation = _n0.aD;
+		var currentScene = _n0.M;
 		var manifest = _n0.i;
 		switch (condition.$) {
 			case 0:
@@ -6811,19 +6351,19 @@ var jschomay$elm_narrative_engine$Engine$Rules$matchesInteraction = F3(
 	});
 var jschomay$elm_narrative_engine$Engine$Rules$matchesRule = F3(
 	function (story, interaction, rule) {
-		var currentLocation = story.aE;
-		var currentScene = story.N;
+		var currentLocation = story.aD;
+		var currentScene = story.M;
 		var manifest = story.i;
 		var history = story.e;
-		return A3(jschomay$elm_narrative_engine$Engine$Rules$matchesInteraction, manifest, rule.aP, interaction) && A2(
+		return A3(jschomay$elm_narrative_engine$Engine$Rules$matchesInteraction, manifest, rule.aN, interaction) && A2(
 			elm$core$List$all,
 			jschomay$elm_narrative_engine$Engine$Rules$matchesCondition(story),
-			rule.aD);
+			rule.aC);
 	});
 var jschomay$elm_narrative_engine$Engine$Rules$numConstrictionsWeight = A2(
 	elm$core$Basics$composeR,
 	function ($) {
-		return $.aD;
+		return $.aC;
 	},
 	elm$core$List$length);
 var jschomay$elm_narrative_engine$Engine$Rules$sceneConstraintWeight = function (rule) {
@@ -6834,10 +6374,10 @@ var jschomay$elm_narrative_engine$Engine$Rules$sceneConstraintWeight = function 
 			return false;
 		}
 	};
-	return A2(elm$core$List$any, hasSceneConstraints, rule.aD) ? 300 : 0;
+	return A2(elm$core$List$any, hasSceneConstraints, rule.aC) ? 300 : 0;
 };
 var jschomay$elm_narrative_engine$Engine$Rules$specificityWeight = function (rule) {
-	var _n0 = rule.aP;
+	var _n0 = rule.aN;
 	switch (_n0.$) {
 		case 4:
 			return 200;
@@ -6869,8 +6409,11 @@ var jschomay$elm_narrative_engine$Engine$Rules$findMatchingRule = F2(
 					elm$core$Basics$composeR,
 					elm$core$Tuple$second,
 					A2(jschomay$elm_narrative_engine$Engine$Rules$matchesRule, story, interactableId)),
-				elm$core$Dict$toList(story.aZ)));
+				elm$core$Dict$toList(story.aY)));
 	});
+var jschomay$elm_narrative_engine$Types$MoveItemToInventory = function (a) {
+	return {$: 5, a: a};
+};
 var jschomay$elm_narrative_engine$Engine$update = F2(
 	function (interactableId, model) {
 		var story = model;
@@ -6891,7 +6434,7 @@ var jschomay$elm_narrative_engine$Engine$update = F2(
 					elm$core$Basics$composeR,
 					elm$core$Tuple$second,
 					function ($) {
-						return $.aA;
+						return $.az;
 					}),
 				matchingRule));
 		var addHistory = function (_n0) {
@@ -6910,282 +6453,90 @@ var jschomay$elm_narrative_engine$Engine$update = F2(
 				A2(jschomay$elm_narrative_engine$Engine$changeWorld, changes, model)),
 			A2(elm$core$Maybe$map, elm$core$Tuple$first, matchingRule));
 	});
-var wernerdegroot$listzipper$List$Zipper$current = function (_n0) {
-	var x = _n0.b;
-	return x;
-};
-var wernerdegroot$listzipper$List$Zipper$next = function (_n0) {
-	var ls = _n0.a;
-	var x = _n0.b;
-	var rs = _n0.c;
-	if (!rs.b) {
-		return elm$core$Maybe$Nothing;
-	} else {
-		var y = rs.a;
-		var ys = rs.b;
-		return elm$core$Maybe$Just(
-			A3(
-				wernerdegroot$listzipper$List$Zipper$Zipper,
-				A2(elm$core$List$cons, x, ls),
-				y,
-				ys));
-	}
-};
 var author$project$Main$update = F2(
 	function (msg, model) {
-		if (!_Utils_eq(
-			jschomay$elm_narrative_engine$Engine$getEnding(model.g),
-			elm$core$Maybe$Nothing)) {
-			return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
-		} else {
-			var interactableId = msg;
-			var updateNarrativeContent = elm$core$Maybe$map(
-				function (narrative) {
-					return A2(
+		switch (msg.$) {
+			case 0:
+				var interactableId = msg.a;
+				var _n1 = A2(jschomay$elm_narrative_engine$Engine$update, interactableId, model.h);
+				var newEngineModel = _n1.a;
+				var maybeMatchedRuleId = _n1.b;
+				var checkEnd = function () {
+					if ((!maybeMatchedRuleId.$) && (maybeMatchedRuleId.a === 'Ending')) {
+						return jschomay$elm_narrative_engine$Engine$changeWorld(
+							_List_fromArray(
+								[
+									jschomay$elm_narrative_engine$Engine$endStory('')
+								]));
+					} else {
+						return elm$core$Basics$identity;
+					}
+				}();
+				var narrativeForThisInteraction = {
+					aL: author$project$Components$getClassName(
+						author$project$Main$findEntity(interactableId)),
+					aM: author$project$Components$getName(
+						author$project$Main$findEntity(interactableId)),
+					aT: A2(
 						elm$core$Maybe$withDefault,
-						narrative,
-						wernerdegroot$listzipper$List$Zipper$next(narrative));
-				});
-			var _n1 = A2(jschomay$elm_narrative_engine$Engine$update, interactableId, model.g);
-			var newEngineModel = _n1.a;
-			var maybeMatchedRuleId = _n1.b;
-			var narrativeForThisInteraction = {
-				aN: author$project$Components$getClassName(
-					author$project$Main$findEntity(interactableId)),
-				aO: author$project$Components$getDisplayInfo(
-					author$project$Main$findEntity(interactableId)).af,
-				aU: A2(
-					elm$core$Maybe$withDefault,
-					author$project$Components$getDisplayInfo(
-						author$project$Main$findEntity(interactableId)).Y,
-					A2(
-						elm$core$Maybe$map,
-						wernerdegroot$listzipper$List$Zipper$current,
+						A2(
+							elm$core$Maybe$withDefault,
+							'',
+							A2(
+								elm$core$Maybe$map,
+								function ($) {
+									return $.aT;
+								},
+								elm$core$List$head(model.s))),
 						A2(
 							elm$core$Maybe$andThen,
 							function (id) {
-								return A2(elm$core$Dict$get, id, model.v);
+								return A2(elm$core$Dict$get, id, model.O);
 							},
-							maybeMatchedRuleId)))
-			};
-			var updatedContent = A2(
-				elm$core$Maybe$withDefault,
-				model.v,
-				A2(
-					elm$core$Maybe$map,
-					function (id) {
-						return A3(elm$core$Dict$update, id, updateNarrativeContent, model.v);
-					},
-					maybeMatchedRuleId));
-			var updatedEndingCountDown = function () {
-				if ((!maybeMatchedRuleId.$) && (maybeMatchedRuleId.a === 'Little Red Riding Hood\'s demise')) {
-					return model.E + 1;
-				} else {
-					return model.E;
-				}
-			}();
-			var checkEnd = (updatedEndingCountDown === 3) ? jschomay$elm_narrative_engine$Engine$changeWorld(
-				_List_fromArray(
-					[
-						jschomay$elm_narrative_engine$Engine$endStory('The End')
-					])) : elm$core$Basics$identity;
-			return _Utils_Tuple2(
-				_Utils_update(
-					model,
-					{
-						E: updatedEndingCountDown,
-						g: checkEnd(newEngineModel),
-						v: updatedContent,
-						z: A2(elm$core$List$cons, narrativeForThisInteraction, model.z)
-					}),
-				author$project$Main$speak(
-					elm$json$Json$Encode$string('Text Updated')));
+							maybeMatchedRuleId))
+				};
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{
+							h: checkEnd(newEngineModel),
+							s: A2(elm$core$List$cons, narrativeForThisInteraction, model.s)
+						}),
+					author$project$Main$speak(
+						elm$json$Json$Encode$string(narrativeForThisInteraction.aT)));
+			case 1:
+				return _Utils_Tuple2(
+					_Utils_update(
+						model,
+						{E: true}),
+					author$project$Main$speak(
+						elm$json$Json$Encode$string(author$project$Narrative$startingNarrative.aT)));
+			default:
+				var _n3 = author$project$Main$init;
+				var initModel = _n3.a;
+				var cmds = _n3.b;
+				return _Utils_Tuple2(
+					_Utils_update(
+						initModel,
+						{E: true}),
+					cmds);
 		}
 	});
-var author$project$Components$getExits = function (_n0) {
+var author$project$ClientTypes$Interact = function (a) {
+	return {$: 0, a: a};
+};
+var author$project$ClientTypes$Restart = {$: 2};
+var author$project$Components$getImage = function (_n0) {
 	var id = _n0.a;
 	var components = _n0.b;
-	var _n1 = A2(elm$core$Dict$get, 'connectedLocations', components);
-	if ((!_n1.$) && (_n1.a.$ === 2)) {
-		var exits = _n1.a.a;
-		return exits;
+	var _n1 = A2(elm$core$Dict$get, 'image', components);
+	if ((!_n1.$) && (_n1.a.$ === 1)) {
+		var url = _n1.a.a;
+		return elm$core$Maybe$Just(url);
 	} else {
-		return _List_Nil;
+		return elm$core$Maybe$Nothing;
 	}
 };
-var author$project$ClientTypes$Interact = elm$core$Basics$identity;
-var elm$core$List$drop = F2(
-	function (n, list) {
-		drop:
-		while (true) {
-			if (n <= 0) {
-				return list;
-			} else {
-				if (!list.b) {
-					return list;
-				} else {
-					var x = list.a;
-					var xs = list.b;
-					var $temp$n = n - 1,
-						$temp$list = xs;
-					n = $temp$n;
-					list = $temp$list;
-					continue drop;
-				}
-			}
-		}
-	});
-var elm$core$List$intersperse = F2(
-	function (sep, xs) {
-		if (!xs.b) {
-			return _List_Nil;
-		} else {
-			var hd = xs.a;
-			var tl = xs.b;
-			var step = F2(
-				function (x, rest) {
-					return A2(
-						elm$core$List$cons,
-						sep,
-						A2(elm$core$List$cons, x, rest));
-				});
-			var spersed = A3(elm$core$List$foldr, step, _List_Nil, tl);
-			return A2(elm$core$List$cons, hd, spersed);
-		}
-	});
-var elm$core$List$isEmpty = function (xs) {
-	if (!xs.b) {
-		return true;
-	} else {
-		return false;
-	}
-};
-var elm$core$List$takeReverse = F3(
-	function (n, list, kept) {
-		takeReverse:
-		while (true) {
-			if (n <= 0) {
-				return kept;
-			} else {
-				if (!list.b) {
-					return kept;
-				} else {
-					var x = list.a;
-					var xs = list.b;
-					var $temp$n = n - 1,
-						$temp$list = xs,
-						$temp$kept = A2(elm$core$List$cons, x, kept);
-					n = $temp$n;
-					list = $temp$list;
-					kept = $temp$kept;
-					continue takeReverse;
-				}
-			}
-		}
-	});
-var elm$core$List$takeTailRec = F2(
-	function (n, list) {
-		return elm$core$List$reverse(
-			A3(elm$core$List$takeReverse, n, list, _List_Nil));
-	});
-var elm$core$List$takeFast = F3(
-	function (ctr, n, list) {
-		if (n <= 0) {
-			return _List_Nil;
-		} else {
-			var _n0 = _Utils_Tuple2(n, list);
-			_n0$1:
-			while (true) {
-				_n0$5:
-				while (true) {
-					if (!_n0.b.b) {
-						return list;
-					} else {
-						if (_n0.b.b.b) {
-							switch (_n0.a) {
-								case 1:
-									break _n0$1;
-								case 2:
-									var _n2 = _n0.b;
-									var x = _n2.a;
-									var _n3 = _n2.b;
-									var y = _n3.a;
-									return _List_fromArray(
-										[x, y]);
-								case 3:
-									if (_n0.b.b.b.b) {
-										var _n4 = _n0.b;
-										var x = _n4.a;
-										var _n5 = _n4.b;
-										var y = _n5.a;
-										var _n6 = _n5.b;
-										var z = _n6.a;
-										return _List_fromArray(
-											[x, y, z]);
-									} else {
-										break _n0$5;
-									}
-								default:
-									if (_n0.b.b.b.b && _n0.b.b.b.b.b) {
-										var _n7 = _n0.b;
-										var x = _n7.a;
-										var _n8 = _n7.b;
-										var y = _n8.a;
-										var _n9 = _n8.b;
-										var z = _n9.a;
-										var _n10 = _n9.b;
-										var w = _n10.a;
-										var tl = _n10.b;
-										return (ctr > 1000) ? A2(
-											elm$core$List$cons,
-											x,
-											A2(
-												elm$core$List$cons,
-												y,
-												A2(
-													elm$core$List$cons,
-													z,
-													A2(
-														elm$core$List$cons,
-														w,
-														A2(elm$core$List$takeTailRec, n - 4, tl))))) : A2(
-											elm$core$List$cons,
-											x,
-											A2(
-												elm$core$List$cons,
-												y,
-												A2(
-													elm$core$List$cons,
-													z,
-													A2(
-														elm$core$List$cons,
-														w,
-														A3(elm$core$List$takeFast, ctr + 1, n - 4, tl)))));
-									} else {
-										break _n0$5;
-									}
-							}
-						} else {
-							if (_n0.a === 1) {
-								break _n0$1;
-							} else {
-								break _n0$5;
-							}
-						}
-					}
-				}
-				return list;
-			}
-			var _n1 = _n0.b;
-			var x = _n1.a;
-			return _List_fromArray(
-				[x]);
-		}
-	});
-var elm$core$List$take = F2(
-	function (n, list) {
-		return A3(elm$core$List$takeFast, 0, n, list);
-	});
 var elm$json$Json$Decode$map = _Json_map1;
 var elm$json$Json$Decode$map2 = _Json_map2;
 var elm$json$Json$Decode$succeed = _Json_succeed;
@@ -7202,11 +6553,7 @@ var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
 	}
 };
 var elm$html$Html$div = _VirtualDom_node('div');
-var elm$html$Html$h1 = _VirtualDom_node('h1');
-var elm$html$Html$p = _VirtualDom_node('p');
-var elm$html$Html$span = _VirtualDom_node('span');
-var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
+var elm$html$Html$img = _VirtualDom_node('img');
 var elm$html$Html$Attributes$stringProperty = F2(
 	function (key, string) {
 		return A2(
@@ -7215,6 +6562,107 @@ var elm$html$Html$Attributes$stringProperty = F2(
 			elm$json$Json$Encode$string(string));
 	});
 var elm$html$Html$Attributes$class = elm$html$Html$Attributes$stringProperty('className');
+var elm$html$Html$Attributes$src = function (url) {
+	return A2(
+		elm$html$Html$Attributes$stringProperty,
+		'src',
+		_VirtualDom_noJavaScriptOrHtmlUri(url));
+};
+var author$project$Theme$Characters$view = function (characters) {
+	var toImage = function (character) {
+		return A2(
+			elm$html$Html$div,
+			_List_Nil,
+			_List_fromArray(
+				[
+					A2(
+					elm$html$Html$img,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$src(
+							A2(
+								elm$core$Maybe$withDefault,
+								'',
+								author$project$Components$getImage(character)))
+						]),
+					_List_Nil)
+				]));
+	};
+	return A2(
+		elm$html$Html$div,
+		_List_fromArray(
+			[
+				elm$html$Html$Attributes$class('Characters')
+			]),
+		A2(elm$core$List$map, toImage, characters));
+};
+var elm$core$Basics$neq = _Utils_notEqual;
+var elm$html$Html$h5 = _VirtualDom_node('h5');
+var elm$html$Html$section = _VirtualDom_node('section');
+var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
+var elm_explorations$markdown$Markdown$defaultOptions = {
+	X: elm$core$Maybe$Nothing,
+	aa: elm$core$Maybe$Just(
+		{ay: false, a_: false}),
+	ao: true,
+	aq: false
+};
+var elm$core$Maybe$isJust = function (maybe) {
+	if (!maybe.$) {
+		return true;
+	} else {
+		return false;
+	}
+};
+var elm_explorations$markdown$Markdown$toHtmlWith = _Markdown_toHtml;
+var elm_explorations$markdown$Markdown$toHtml = elm_explorations$markdown$Markdown$toHtmlWith(elm_explorations$markdown$Markdown$defaultOptions);
+var author$project$Theme$Storyline$view = F2(
+	function (storyLine, ending) {
+		return A2(
+			elm$html$Html$div,
+			_List_fromArray(
+				[
+					elm$html$Html$Attributes$class('StoryLine')
+				]),
+			_List_fromArray(
+				[
+					function () {
+					var _n0 = elm$core$List$head(storyLine);
+					if (!_n0.$) {
+						var narrative = _n0.a.aT;
+						return A2(
+							elm$html$Html$section,
+							_List_Nil,
+							_List_fromArray(
+								[
+									A2(
+									elm_explorations$markdown$Markdown$toHtml,
+									_List_fromArray(
+										[
+											elm$html$Html$Attributes$class('Storyline__Item__Narrative markdown-body')
+										]),
+									narrative)
+								]));
+					} else {
+						return elm$html$Html$text('');
+					}
+				}(),
+					(!_Utils_eq(ending, elm$core$Maybe$Nothing)) ? A2(
+					elm$html$Html$h5,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('Storyline__Item__Ending')
+						]),
+					_List_fromArray(
+						[
+							elm$html$Html$text(
+							A2(elm$core$Maybe$withDefault, 'The End', ending))
+						])) : elm$html$Html$text('')
+				]));
+	});
+var elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var elm$html$Html$Attributes$style = elm$virtual_dom$VirtualDom$style;
 var elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 0, a: a};
 };
@@ -7232,344 +6680,23 @@ var elm$html$Html$Events$onClick = function (msg) {
 		'click',
 		elm$json$Json$Decode$succeed(msg));
 };
-var author$project$Theme$CurrentSummary$view = F3(
-	function (currentLocation, props, characters) {
-		var isEmpty = elm$core$List$isEmpty(characters) && elm$core$List$isEmpty(props);
-		var interactableView = F2(
-			function (msg, entity) {
-				return A2(
-					elm$html$Html$span,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('CurrentSummary__StoryElement u-selectable'),
-							elm$html$Html$Events$onClick(
-							msg(entity.a))
-						]),
-					_List_fromArray(
-						[
-							elm$html$Html$text(
-							author$project$Components$getDisplayInfo(entity).af)
-						]));
-			});
-		var format = function (list) {
-			var interactables = (elm$core$List$length(list) > 2) ? _Utils_ap(
-				A2(
-					elm$core$List$intersperse,
-					elm$html$Html$text(', '),
-					A2(
-						elm$core$List$take,
-						elm$core$List$length(list) - 1,
-						list)),
-				A2(
-					elm$core$List$cons,
-					elm$html$Html$text(' and '),
-					A2(
-						elm$core$List$drop,
-						elm$core$List$length(list) - 1,
-						list))) : A2(
-				elm$core$List$intersperse,
-				elm$html$Html$text(' and '),
-				list);
-			return _Utils_ap(
-				interactables,
-				_List_fromArray(
-					[
-						elm$html$Html$text('.')
-					]));
-		};
-		var propsList = (!elm$core$List$isEmpty(props)) ? A2(
-			elm$html$Html$p,
-			_List_Nil,
-			A2(
-				elm$core$List$cons,
-				elm$html$Html$text('Items here: '),
-				format(
-					A2(
-						elm$core$List$map,
-						interactableView(elm$core$Basics$identity),
-						props)))) : A2(elm$html$Html$span, _List_Nil, _List_Nil);
-		var charactersList = (!elm$core$List$isEmpty(characters)) ? A2(
-			elm$html$Html$p,
-			_List_Nil,
-			A2(
-				elm$core$List$cons,
-				elm$html$Html$text('Characters here: '),
-				format(
-					A2(
-						elm$core$List$map,
-						interactableView(elm$core$Basics$identity),
-						characters)))) : A2(elm$html$Html$span, _List_Nil, _List_Nil);
-		return A2(
-			elm$html$Html$div,
-			_List_fromArray(
-				[
-					elm$html$Html$Attributes$class('CurrentSummary')
-				]),
-			_Utils_ap(
-				_List_fromArray(
-					[
-						A2(
-						elm$html$Html$h1,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$class('Current-location')
-							]),
-						_List_fromArray(
-							[
-								elm$html$Html$text(
-								author$project$Components$getDisplayInfo(currentLocation).af)
-							]))
-					]),
-				isEmpty ? _List_fromArray(
-					[
-						elm$html$Html$text('Nothing here.')
-					]) : _List_fromArray(
-					[charactersList, propsList])));
-	});
-var elm$html$Html$h3 = _VirtualDom_node('h3');
-var elm$html$Html$li = _VirtualDom_node('li');
-var elm$virtual_dom$VirtualDom$keyedNode = function (tag) {
-	return _VirtualDom_keyedNode(
-		_VirtualDom_noScript(tag));
-};
-var elm$html$Html$Keyed$node = elm$virtual_dom$VirtualDom$keyedNode;
-var elm$html$Html$Keyed$ol = elm$html$Html$Keyed$node('ol');
-var author$project$Theme$Inventory$view = function (items) {
-	var numItems = elm$core$List$length(items);
-	var inventoryItem = F2(
-		function (i, entity) {
-			var key = _Utils_ap(
-				entity.a,
-				elm$core$String$fromInt(numItems - i));
-			return _Utils_Tuple2(
-				key,
-				A2(
-					elm$html$Html$li,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('Inventory__Item u-selectable'),
-							elm$html$Html$Events$onClick(entity.a)
-						]),
-					_List_fromArray(
-						[
-							elm$html$Html$text(
-							author$project$Components$getDisplayInfo(entity).af)
-						])));
-		});
-	return A2(
-		elm$html$Html$div,
-		_List_fromArray(
-			[
-				elm$html$Html$Attributes$class('Inventory')
-			]),
-		_List_fromArray(
-			[
-				A2(
-				elm$html$Html$h3,
-				_List_Nil,
-				_List_fromArray(
-					[
-						elm$html$Html$text('Inventory')
-					])),
-				A2(
-				elm$html$Html$div,
-				_List_fromArray(
-					[
-						elm$html$Html$Attributes$class('Inventory__list')
-					]),
-				_List_fromArray(
-					[
-						A2(
-						elm$html$Html$Keyed$ol,
-						_List_Nil,
-						A2(elm$core$List$indexedMap, inventoryItem, items))
-					]))
-			]));
-};
-var author$project$Components$getName = function (direction) {
-	switch (direction) {
-		case 0:
-			return 'North';
-		case 1:
-			return 'South';
-		case 2:
-			return 'East';
-		default:
-			return 'West';
-	}
-};
-var author$project$Theme$Locations$view = F2(
-	function (exits, currentLocation) {
-		var exitsList = A2(
-			elm$html$Html$div,
-			_List_Nil,
-			A2(
-				elm$core$List$map,
-				function (_n0) {
-					var direction = _n0.a;
-					var entity = _n0.b;
-					return A2(
-						elm$html$Html$p,
-						_List_Nil,
-						_List_fromArray(
-							[
-								A2(
-								elm$html$Html$span,
-								_List_fromArray(
-									[
-										elm$html$Html$Attributes$class('CurrentSummary__StoryElement u-selectable'),
-										elm$html$Html$Events$onClick(entity.a)
-									]),
-								_List_fromArray(
-									[
-										elm$html$Html$text(
-										author$project$Components$getDisplayInfo(entity).af)
-									])),
-								elm$html$Html$text(
-								' is to the ' + (author$project$Components$getName(direction) + '.'))
-							]));
-				},
-				exits));
-		return A2(
-			elm$html$Html$div,
-			_List_fromArray(
-				[
-					elm$html$Html$Attributes$class('Locations')
-				]),
-			_List_fromArray(
-				[
-					A2(
-					elm$html$Html$h3,
-					_List_Nil,
-					_List_fromArray(
-						[
-							elm$html$Html$text('Connecting locations')
-						])),
-					A2(
-					elm$html$Html$div,
-					_List_fromArray(
-						[
-							elm$html$Html$Attributes$class('Locations__list')
-						]),
-					_List_fromArray(
-						[exitsList]))
-				]));
-	});
-var elm$html$Html$h4 = _VirtualDom_node('h4');
-var elm$html$Html$h5 = _VirtualDom_node('h5');
-var elm$html$Html$Attributes$classList = function (classes) {
-	return elm$html$Html$Attributes$class(
-		A2(
-			elm$core$String$join,
-			' ',
-			A2(
-				elm$core$List$map,
-				elm$core$Tuple$first,
-				A2(elm$core$List$filter, elm$core$Tuple$second, classes))));
-};
-var elm_explorations$markdown$Markdown$defaultOptions = {
-	X: elm$core$Maybe$Nothing,
-	ab: elm$core$Maybe$Just(
-		{az: false, a$: false}),
-	aq: true,
-	as: false
-};
-var elm$core$Maybe$isJust = function (maybe) {
-	if (!maybe.$) {
-		return true;
-	} else {
-		return false;
-	}
-};
-var elm_explorations$markdown$Markdown$toHtmlWith = _Markdown_toHtml;
-var elm_explorations$markdown$Markdown$toHtml = elm_explorations$markdown$Markdown$toHtmlWith(elm_explorations$markdown$Markdown$defaultOptions);
-var author$project$Theme$Storyline$view = F2(
-	function (storyLine, ending) {
-		var storyLi = F2(
-			function (i, _n0) {
-				var interactableName = _n0.aO;
-				var interactableCssSelector = _n0.aN;
-				var narrative = _n0.aU;
-				var numLines = elm$core$List$length(storyLine);
-				var key = _Utils_ap(
-					interactableName,
-					elm$core$String$fromInt(numLines - i));
-				var classes = _List_fromArray(
-					[
-						_Utils_Tuple2('Storyline__Item', true),
-						_Utils_Tuple2('Storyline__Item--' + interactableCssSelector, true),
-						_Utils_Tuple2('u-fade-in', !i)
-					]);
-				return _Utils_Tuple2(
-					key,
-					A2(
-						elm$html$Html$li,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$classList(classes)
-							]),
-						_Utils_ap(
-							_List_fromArray(
-								[
-									A2(
-									elm$html$Html$h4,
-									_List_fromArray(
-										[
-											elm$html$Html$Attributes$class('Storyline__Item__Action')
-										]),
-									_List_fromArray(
-										[
-											elm$html$Html$text(interactableName)
-										])),
-									A2(
-									elm_explorations$markdown$Markdown$toHtml,
-									_List_fromArray(
-										[
-											elm$html$Html$Attributes$class('Storyline__Item__Narrative markdown-body')
-										]),
-									narrative)
-								]),
-							((!i) && (!_Utils_eq(ending, elm$core$Maybe$Nothing))) ? _List_fromArray(
-								[
-									A2(
-									elm$html$Html$h5,
-									_List_fromArray(
-										[
-											elm$html$Html$Attributes$class('Storyline__Item__Ending')
-										]),
-									_List_fromArray(
-										[
-											elm$html$Html$text(
-											A2(elm$core$Maybe$withDefault, 'The End', ending))
-										]))
-								]) : _List_Nil)));
-			});
-		return A2(
-			elm$html$Html$Keyed$ol,
-			_List_fromArray(
-				[
-					elm$html$Html$Attributes$class('Storyline')
-				]),
-			A2(elm$core$List$indexedMap, storyLi, storyLine));
-	});
 var author$project$Theme$Layout$view = function (displayState) {
 	return A2(
 		elm$html$Html$div,
 		_List_fromArray(
 			[
 				elm$html$Html$Attributes$class(
-				'GamePage GamePage--' + author$project$Components$getClassName(displayState.aE))
+				'Location Location--' + author$project$Components$getClassName(displayState.aD)),
+				A2(
+				elm$html$Html$Attributes$style,
+				'background-image',
+				'url(' + (A2(
+					elm$core$Maybe$withDefault,
+					'',
+					author$project$Components$getImage(displayState.aD)) + ')'))
 			]),
 		_List_fromArray(
 			[
-				A2(
-				elm$html$Html$div,
-				_List_fromArray(
-					[
-						elm$html$Html$Attributes$class(
-						'GamePage__background GamePage__background--' + author$project$Components$getClassName(displayState.aE))
-					]),
-				_List_Nil),
 				A2(
 				elm$html$Html$div,
 				_List_fromArray(
@@ -7578,6 +6705,7 @@ var author$project$Theme$Layout$view = function (displayState) {
 					]),
 				_List_fromArray(
 					[
+						author$project$Theme$Characters$view(displayState.aB),
 						A2(
 						elm$html$Html$div,
 						_List_fromArray(
@@ -7586,34 +6714,48 @@ var author$project$Theme$Layout$view = function (displayState) {
 							]),
 						_List_fromArray(
 							[
-								A3(author$project$Theme$CurrentSummary$view, displayState.aE, displayState.aR, displayState.aC),
-								A2(author$project$Theme$Storyline$view, displayState.z, displayState.aG)
-							])),
-						A2(
-						elm$html$Html$div,
-						_List_fromArray(
-							[
-								elm$html$Html$Attributes$class('Layout__Sidebar')
-							]),
-						_List_fromArray(
-							[
-								A2(author$project$Theme$Locations$view, displayState.aH, displayState.aE),
-								author$project$Theme$Inventory$view(displayState.aS)
+								A2(author$project$Theme$Storyline$view, displayState.s, displayState.aF),
+								(!_Utils_eq(displayState.aF, elm$core$Maybe$Nothing)) ? A2(
+								elm$html$Html$h5,
+								_List_fromArray(
+									[
+										elm$html$Html$Attributes$class('StoryRestart'),
+										elm$html$Html$Events$onClick(author$project$ClientTypes$Restart)
+									]),
+								_List_fromArray(
+									[
+										elm$html$Html$text('Restart')
+									])) : A2(
+								elm$html$Html$h5,
+								_List_fromArray(
+									[
+										elm$html$Html$Attributes$class('StoryContinue'),
+										elm$html$Html$Events$onClick(
+										author$project$ClientTypes$Interact('next'))
+									]),
+								_List_fromArray(
+									[
+										elm$html$Html$text('Continue')
+									]))
 							]))
 					]))
 			]));
 };
 var jschomay$elm_narrative_engine$Engine$getCharactersInCurrentLocation = function (_n0) {
 	var story = _n0;
-	return A2(jschomay$elm_narrative_engine$Engine$Manifest$getCharactersInLocation, story.aE, story.i);
+	return A2(jschomay$elm_narrative_engine$Engine$Manifest$getCharactersInLocation, story.aD, story.i);
 };
 var jschomay$elm_narrative_engine$Engine$getCurrentLocation = function (_n0) {
 	var story = _n0;
-	return story.aE;
+	return story.aD;
+};
+var jschomay$elm_narrative_engine$Engine$getEnding = function (_n0) {
+	var story = _n0;
+	return story.T;
 };
 var jschomay$elm_narrative_engine$Engine$getItemsInCurrentLocation = function (_n0) {
 	var story = _n0;
-	return A2(jschomay$elm_narrative_engine$Engine$Manifest$getItemsInLocation, story.aE, story.i);
+	return A2(jschomay$elm_narrative_engine$Engine$Manifest$getItemsInLocation, story.aD, story.i);
 };
 var jschomay$elm_narrative_engine$Engine$getItemsInInventory = function (_n0) {
 	var story = _n0;
@@ -7621,35 +6763,34 @@ var jschomay$elm_narrative_engine$Engine$getItemsInInventory = function (_n0) {
 };
 var author$project$Main$view = function (model) {
 	var currentLocation = author$project$Main$findEntity(
-		jschomay$elm_narrative_engine$Engine$getCurrentLocation(model.g));
+		jschomay$elm_narrative_engine$Engine$getCurrentLocation(model.h));
 	var displayState = {
-		aC: A2(
+		aB: A2(
 			elm$core$List$map,
 			author$project$Main$findEntity,
-			jschomay$elm_narrative_engine$Engine$getCharactersInCurrentLocation(model.g)),
-		aE: currentLocation,
-		aG: jschomay$elm_narrative_engine$Engine$getEnding(model.g),
-		aH: A2(
-			elm$core$List$map,
-			function (_n0) {
-				var direction = _n0.a;
-				var id = _n0.b;
-				return _Utils_Tuple2(
-					direction,
-					author$project$Main$findEntity(id));
-			},
-			author$project$Components$getExits(currentLocation)),
-		aR: A2(
+			jschomay$elm_narrative_engine$Engine$getCharactersInCurrentLocation(model.h)),
+		aD: currentLocation,
+		aF: jschomay$elm_narrative_engine$Engine$getEnding(model.h),
+		aP: A2(
 			elm$core$List$map,
 			author$project$Main$findEntity,
-			jschomay$elm_narrative_engine$Engine$getItemsInCurrentLocation(model.g)),
-		aS: A2(
+			jschomay$elm_narrative_engine$Engine$getItemsInCurrentLocation(model.h)),
+		aQ: A2(
 			elm$core$List$map,
 			author$project$Main$findEntity,
-			jschomay$elm_narrative_engine$Engine$getItemsInInventory(model.g)),
-		z: model.z
+			jschomay$elm_narrative_engine$Engine$getItemsInInventory(model.h)),
+		s: model.s
 	};
-	return author$project$Theme$Layout$view(displayState);
+	return (!model.E) ? A2(
+		elm$html$Html$div,
+		_List_fromArray(
+			[
+				elm$html$Html$Attributes$class('Loading')
+			]),
+		_List_fromArray(
+			[
+				elm$html$Html$text('Loading...')
+			])) : author$project$Theme$Layout$view(displayState);
 };
 var elm$browser$Browser$External = function (a) {
 	return {$: 1, a: a};
@@ -7767,7 +6908,7 @@ var elm$core$String$contains = _String_contains;
 var elm$core$String$toInt = _String_toInt;
 var elm$url$Url$Url = F6(
 	function (protocol, host, port_, path, query, fragment) {
-		return {aa: fragment, ac: host, ah: path, aj: port_, am: protocol, an: query};
+		return {_: fragment, ab: host, af: path, ah: port_, ak: protocol, al: query};
 	});
 var elm$url$Url$chompBeforePath = F5(
 	function (protocol, path, params, frag, str) {
@@ -7872,18 +7013,21 @@ var elm$url$Url$fromString = function (str) {
 		A2(elm$core$String$dropLeft, 8, str)) : elm$core$Maybe$Nothing);
 };
 var elm$browser$Browser$element = _Browser_element;
-var elm$core$Platform$Sub$batch = _Platform_batch;
-var elm$core$Platform$Sub$none = elm$core$Platform$Sub$batch(_List_Nil);
+var elm$core$Basics$always = F2(
+	function (a, _n0) {
+		return a;
+	});
 var author$project$Main$main = elm$browser$Browser$element(
 	{
-		aM: function (_n0) {
+		aK: function (_n0) {
 			return author$project$Main$init;
 		},
-		a_: function (_n1) {
-			return elm$core$Platform$Sub$none;
+		aZ: function (_n1) {
+			return author$project$Main$loaded(
+				elm$core$Basics$always(author$project$ClientTypes$Loaded));
 		},
-		a1: author$project$Main$update,
-		a3: author$project$Main$view
+		a$: author$project$Main$update,
+		a1: author$project$Main$view
 	});
 _Platform_export({'Main':{'init':author$project$Main$main(
 	elm$json$Json$Decode$succeed(0))(0)}});}(this));
