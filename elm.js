@@ -80,6 +80,271 @@ function A9(fun, a, b, c, d, e, f, g, h, i) {
 
 
 
+var _List_Nil = { $: 0 };
+var _List_Nil_UNUSED = { $: '[]' };
+
+function _List_Cons(hd, tl) { return { $: 1, a: hd, b: tl }; }
+function _List_Cons_UNUSED(hd, tl) { return { $: '::', a: hd, b: tl }; }
+
+
+var _List_cons = F2(_List_Cons);
+
+function _List_fromArray(arr)
+{
+	var out = _List_Nil;
+	for (var i = arr.length; i--; )
+	{
+		out = _List_Cons(arr[i], out);
+	}
+	return out;
+}
+
+function _List_toArray(xs)
+{
+	for (var out = []; xs.b; xs = xs.b) // WHILE_CONS
+	{
+		out.push(xs.a);
+	}
+	return out;
+}
+
+var _List_map2 = F3(function(f, xs, ys)
+{
+	for (var arr = []; xs.b && ys.b; xs = xs.b, ys = ys.b) // WHILE_CONSES
+	{
+		arr.push(A2(f, xs.a, ys.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_map3 = F4(function(f, xs, ys, zs)
+{
+	for (var arr = []; xs.b && ys.b && zs.b; xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
+	{
+		arr.push(A3(f, xs.a, ys.a, zs.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_map4 = F5(function(f, ws, xs, ys, zs)
+{
+	for (var arr = []; ws.b && xs.b && ys.b && zs.b; ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
+	{
+		arr.push(A4(f, ws.a, xs.a, ys.a, zs.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_map5 = F6(function(f, vs, ws, xs, ys, zs)
+{
+	for (var arr = []; vs.b && ws.b && xs.b && ys.b && zs.b; vs = vs.b, ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
+	{
+		arr.push(A5(f, vs.a, ws.a, xs.a, ys.a, zs.a));
+	}
+	return _List_fromArray(arr);
+});
+
+var _List_sortBy = F2(function(f, xs)
+{
+	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
+		return _Utils_cmp(f(a), f(b));
+	}));
+});
+
+var _List_sortWith = F2(function(f, xs)
+{
+	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
+		var ord = A2(f, a, b);
+		return ord === elm$core$Basics$EQ ? 0 : ord === elm$core$Basics$LT ? -1 : 1;
+	}));
+});
+
+
+
+// EQUALITY
+
+function _Utils_eq(x, y)
+{
+	for (
+		var pair, stack = [], isEqual = _Utils_eqHelp(x, y, 0, stack);
+		isEqual && (pair = stack.pop());
+		isEqual = _Utils_eqHelp(pair.a, pair.b, 0, stack)
+		)
+	{}
+
+	return isEqual;
+}
+
+function _Utils_eqHelp(x, y, depth, stack)
+{
+	if (depth > 100)
+	{
+		stack.push(_Utils_Tuple2(x,y));
+		return true;
+	}
+
+	if (x === y)
+	{
+		return true;
+	}
+
+	if (typeof x !== 'object' || x === null || y === null)
+	{
+		typeof x === 'function' && _Debug_crash(5);
+		return false;
+	}
+
+	/**_UNUSED/
+	if (x.$ === 'Set_elm_builtin')
+	{
+		x = elm$core$Set$toList(x);
+		y = elm$core$Set$toList(y);
+	}
+	if (x.$ === 'RBNode_elm_builtin' || x.$ === 'RBEmpty_elm_builtin')
+	{
+		x = elm$core$Dict$toList(x);
+		y = elm$core$Dict$toList(y);
+	}
+	//*/
+
+	/**/
+	if (x.$ < 0)
+	{
+		x = elm$core$Dict$toList(x);
+		y = elm$core$Dict$toList(y);
+	}
+	//*/
+
+	for (var key in x)
+	{
+		if (!_Utils_eqHelp(x[key], y[key], depth + 1, stack))
+		{
+			return false;
+		}
+	}
+	return true;
+}
+
+var _Utils_equal = F2(_Utils_eq);
+var _Utils_notEqual = F2(function(a, b) { return !_Utils_eq(a,b); });
+
+
+
+// COMPARISONS
+
+// Code in Generate/JavaScript.hs, Basics.js, and List.js depends on
+// the particular integer values assigned to LT, EQ, and GT.
+
+function _Utils_cmp(x, y, ord)
+{
+	if (typeof x !== 'object')
+	{
+		return x === y ? /*EQ*/ 0 : x < y ? /*LT*/ -1 : /*GT*/ 1;
+	}
+
+	/**_UNUSED/
+	if (x instanceof String)
+	{
+		var a = x.valueOf();
+		var b = y.valueOf();
+		return a === b ? 0 : a < b ? -1 : 1;
+	}
+	//*/
+
+	/**/
+	if (!x.$)
+	//*/
+	/**_UNUSED/
+	if (x.$[0] === '#')
+	//*/
+	{
+		return (ord = _Utils_cmp(x.a, y.a))
+			? ord
+			: (ord = _Utils_cmp(x.b, y.b))
+				? ord
+				: _Utils_cmp(x.c, y.c);
+	}
+
+	// traverse conses until end of a list or a mismatch
+	for (; x.b && y.b && !(ord = _Utils_cmp(x.a, y.a)); x = x.b, y = y.b) {} // WHILE_CONSES
+	return ord || (x.b ? /*GT*/ 1 : y.b ? /*LT*/ -1 : /*EQ*/ 0);
+}
+
+var _Utils_lt = F2(function(a, b) { return _Utils_cmp(a, b) < 0; });
+var _Utils_le = F2(function(a, b) { return _Utils_cmp(a, b) < 1; });
+var _Utils_gt = F2(function(a, b) { return _Utils_cmp(a, b) > 0; });
+var _Utils_ge = F2(function(a, b) { return _Utils_cmp(a, b) >= 0; });
+
+var _Utils_compare = F2(function(x, y)
+{
+	var n = _Utils_cmp(x, y);
+	return n < 0 ? elm$core$Basics$LT : n ? elm$core$Basics$GT : elm$core$Basics$EQ;
+});
+
+
+// COMMON VALUES
+
+var _Utils_Tuple0 = 0;
+var _Utils_Tuple0_UNUSED = { $: '#0' };
+
+function _Utils_Tuple2(a, b) { return { a: a, b: b }; }
+function _Utils_Tuple2_UNUSED(a, b) { return { $: '#2', a: a, b: b }; }
+
+function _Utils_Tuple3(a, b, c) { return { a: a, b: b, c: c }; }
+function _Utils_Tuple3_UNUSED(a, b, c) { return { $: '#3', a: a, b: b, c: c }; }
+
+function _Utils_chr(c) { return c; }
+function _Utils_chr_UNUSED(c) { return new String(c); }
+
+
+// RECORDS
+
+function _Utils_update(oldRecord, updatedFields)
+{
+	var newRecord = {};
+
+	for (var key in oldRecord)
+	{
+		newRecord[key] = oldRecord[key];
+	}
+
+	for (var key in updatedFields)
+	{
+		newRecord[key] = updatedFields[key];
+	}
+
+	return newRecord;
+}
+
+
+// APPEND
+
+var _Utils_append = F2(_Utils_ap);
+
+function _Utils_ap(xs, ys)
+{
+	// append Strings
+	if (typeof xs === 'string')
+	{
+		return xs + ys;
+	}
+
+	// append Lists
+	if (!xs.b)
+	{
+		return ys;
+	}
+	var root = _List_Cons(xs.a, ys);
+	xs = xs.b
+	for (var curr = root; xs.b; xs = xs.b) // WHILE_CONS
+	{
+		curr = curr.b = _List_Cons(xs.a, ys);
+	}
+	return root;
+}
+
+
+
 var _JsArray_empty = [];
 
 function _JsArray_singleton(value)
@@ -228,87 +493,6 @@ var _JsArray_appendN = F3(function(n, dest, source)
     }
 
     return result;
-});
-
-
-
-var _List_Nil = { $: 0 };
-var _List_Nil_UNUSED = { $: '[]' };
-
-function _List_Cons(hd, tl) { return { $: 1, a: hd, b: tl }; }
-function _List_Cons_UNUSED(hd, tl) { return { $: '::', a: hd, b: tl }; }
-
-
-var _List_cons = F2(_List_Cons);
-
-function _List_fromArray(arr)
-{
-	var out = _List_Nil;
-	for (var i = arr.length; i--; )
-	{
-		out = _List_Cons(arr[i], out);
-	}
-	return out;
-}
-
-function _List_toArray(xs)
-{
-	for (var out = []; xs.b; xs = xs.b) // WHILE_CONS
-	{
-		out.push(xs.a);
-	}
-	return out;
-}
-
-var _List_map2 = F3(function(f, xs, ys)
-{
-	for (var arr = []; xs.b && ys.b; xs = xs.b, ys = ys.b) // WHILE_CONSES
-	{
-		arr.push(A2(f, xs.a, ys.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_map3 = F4(function(f, xs, ys, zs)
-{
-	for (var arr = []; xs.b && ys.b && zs.b; xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
-	{
-		arr.push(A3(f, xs.a, ys.a, zs.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_map4 = F5(function(f, ws, xs, ys, zs)
-{
-	for (var arr = []; ws.b && xs.b && ys.b && zs.b; ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
-	{
-		arr.push(A4(f, ws.a, xs.a, ys.a, zs.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_map5 = F6(function(f, vs, ws, xs, ys, zs)
-{
-	for (var arr = []; vs.b && ws.b && xs.b && ys.b && zs.b; vs = vs.b, ws = ws.b, xs = xs.b, ys = ys.b, zs = zs.b) // WHILE_CONSES
-	{
-		arr.push(A5(f, vs.a, ws.a, xs.a, ys.a, zs.a));
-	}
-	return _List_fromArray(arr);
-});
-
-var _List_sortBy = F2(function(f, xs)
-{
-	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
-		return _Utils_cmp(f(a), f(b));
-	}));
-});
-
-var _List_sortWith = F2(function(f, xs)
-{
-	return _List_fromArray(_List_toArray(xs).sort(function(a, b) {
-		var ord = A2(f, a, b);
-		return ord === elm$core$Basics$EQ ? 0 : ord === elm$core$Basics$LT ? -1 : 1;
-	}));
 });
 
 
@@ -586,195 +770,11 @@ function _Debug_crash_UNUSED(identifier, fact1, fact2, fact3, fact4)
 
 function _Debug_regionToString(region)
 {
-	if (region.R.D === region.Y.D)
+	if (region.U.D === region.af.D)
 	{
-		return 'on line ' + region.R.D;
+		return 'on line ' + region.U.D;
 	}
-	return 'on lines ' + region.R.D + ' through ' + region.Y.D;
-}
-
-
-
-// EQUALITY
-
-function _Utils_eq(x, y)
-{
-	for (
-		var pair, stack = [], isEqual = _Utils_eqHelp(x, y, 0, stack);
-		isEqual && (pair = stack.pop());
-		isEqual = _Utils_eqHelp(pair.a, pair.b, 0, stack)
-		)
-	{}
-
-	return isEqual;
-}
-
-function _Utils_eqHelp(x, y, depth, stack)
-{
-	if (depth > 100)
-	{
-		stack.push(_Utils_Tuple2(x,y));
-		return true;
-	}
-
-	if (x === y)
-	{
-		return true;
-	}
-
-	if (typeof x !== 'object' || x === null || y === null)
-	{
-		typeof x === 'function' && _Debug_crash(5);
-		return false;
-	}
-
-	/**_UNUSED/
-	if (x.$ === 'Set_elm_builtin')
-	{
-		x = elm$core$Set$toList(x);
-		y = elm$core$Set$toList(y);
-	}
-	if (x.$ === 'RBNode_elm_builtin' || x.$ === 'RBEmpty_elm_builtin')
-	{
-		x = elm$core$Dict$toList(x);
-		y = elm$core$Dict$toList(y);
-	}
-	//*/
-
-	/**/
-	if (x.$ < 0)
-	{
-		x = elm$core$Dict$toList(x);
-		y = elm$core$Dict$toList(y);
-	}
-	//*/
-
-	for (var key in x)
-	{
-		if (!_Utils_eqHelp(x[key], y[key], depth + 1, stack))
-		{
-			return false;
-		}
-	}
-	return true;
-}
-
-var _Utils_equal = F2(_Utils_eq);
-var _Utils_notEqual = F2(function(a, b) { return !_Utils_eq(a,b); });
-
-
-
-// COMPARISONS
-
-// Code in Generate/JavaScript.hs, Basics.js, and List.js depends on
-// the particular integer values assigned to LT, EQ, and GT.
-
-function _Utils_cmp(x, y, ord)
-{
-	if (typeof x !== 'object')
-	{
-		return x === y ? /*EQ*/ 0 : x < y ? /*LT*/ -1 : /*GT*/ 1;
-	}
-
-	/**_UNUSED/
-	if (x instanceof String)
-	{
-		var a = x.valueOf();
-		var b = y.valueOf();
-		return a === b ? 0 : a < b ? -1 : 1;
-	}
-	//*/
-
-	/**/
-	if (!x.$)
-	//*/
-	/**_UNUSED/
-	if (x.$[0] === '#')
-	//*/
-	{
-		return (ord = _Utils_cmp(x.a, y.a))
-			? ord
-			: (ord = _Utils_cmp(x.b, y.b))
-				? ord
-				: _Utils_cmp(x.c, y.c);
-	}
-
-	// traverse conses until end of a list or a mismatch
-	for (; x.b && y.b && !(ord = _Utils_cmp(x.a, y.a)); x = x.b, y = y.b) {} // WHILE_CONSES
-	return ord || (x.b ? /*GT*/ 1 : y.b ? /*LT*/ -1 : /*EQ*/ 0);
-}
-
-var _Utils_lt = F2(function(a, b) { return _Utils_cmp(a, b) < 0; });
-var _Utils_le = F2(function(a, b) { return _Utils_cmp(a, b) < 1; });
-var _Utils_gt = F2(function(a, b) { return _Utils_cmp(a, b) > 0; });
-var _Utils_ge = F2(function(a, b) { return _Utils_cmp(a, b) >= 0; });
-
-var _Utils_compare = F2(function(x, y)
-{
-	var n = _Utils_cmp(x, y);
-	return n < 0 ? elm$core$Basics$LT : n ? elm$core$Basics$GT : elm$core$Basics$EQ;
-});
-
-
-// COMMON VALUES
-
-var _Utils_Tuple0 = 0;
-var _Utils_Tuple0_UNUSED = { $: '#0' };
-
-function _Utils_Tuple2(a, b) { return { a: a, b: b }; }
-function _Utils_Tuple2_UNUSED(a, b) { return { $: '#2', a: a, b: b }; }
-
-function _Utils_Tuple3(a, b, c) { return { a: a, b: b, c: c }; }
-function _Utils_Tuple3_UNUSED(a, b, c) { return { $: '#3', a: a, b: b, c: c }; }
-
-function _Utils_chr(c) { return c; }
-function _Utils_chr_UNUSED(c) { return new String(c); }
-
-
-// RECORDS
-
-function _Utils_update(oldRecord, updatedFields)
-{
-	var newRecord = {};
-
-	for (var key in oldRecord)
-	{
-		newRecord[key] = oldRecord[key];
-	}
-
-	for (var key in updatedFields)
-	{
-		newRecord[key] = updatedFields[key];
-	}
-
-	return newRecord;
-}
-
-
-// APPEND
-
-var _Utils_append = F2(_Utils_ap);
-
-function _Utils_ap(xs, ys)
-{
-	// append Strings
-	if (typeof xs === 'string')
-	{
-		return xs + ys;
-	}
-
-	// append Lists
-	if (!xs.b)
-	{
-		return ys;
-	}
-	var root = _List_Cons(xs.a, ys);
-	xs = xs.b
-	for (var curr = root; xs.b; xs = xs.b) // WHILE_CONS
-	{
-		curr = curr.b = _List_Cons(xs.a, ys);
-	}
-	return root;
+	return 'on lines ' + region.U.D + ' through ' + region.af.D;
 }
 
 
@@ -1841,9 +1841,9 @@ var _Platform_worker = F4(function(impl, flagDecoder, debugMetadata, args)
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.aK,
-		impl.a$,
-		impl.aZ,
+		impl.aR,
+		impl.a6,
+		impl.a4,
 		function() { return function() {} }
 	);
 });
@@ -2297,6 +2297,23 @@ function _Platform_mergeExportsDebug(moduleName, obj, exports)
 }
 
 
+function _Url_percentEncode(string)
+{
+	return encodeURIComponent(string);
+}
+
+function _Url_percentDecode(string)
+{
+	try
+	{
+		return elm$core$Maybe$Just(decodeURIComponent(string));
+	}
+	catch (e)
+	{
+		return elm$core$Maybe$Nothing;
+	}
+}
+
 
 
 // HELPERS
@@ -2644,8 +2661,8 @@ var _VirtualDom_mapEventRecord = F2(function(func, record)
 {
 	return {
 		m: func(record.m),
-		S: record.S,
-		Q: record.Q
+		V: record.V,
+		T: record.T
 	}
 });
 
@@ -2914,10 +2931,10 @@ function _VirtualDom_makeCallback(eventNode, initialHandler)
 
 		var value = result.a;
 		var message = !tag ? value : tag < 3 ? value.a : value.m;
-		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.S;
+		var stopPropagation = tag == 1 ? value.b : tag == 3 && value.V;
 		var currentEventNode = (
 			stopPropagation && event.stopPropagation(),
-			(tag == 2 ? value.b : tag == 3 && value.Q) && event.preventDefault(),
+			(tag == 2 ? value.b : tag == 3 && value.T) && event.preventDefault(),
 			eventNode
 		);
 		var tagger;
@@ -3857,105 +3874,6 @@ function _VirtualDom_dekey(keyedNode)
 
 
 
-// VIRTUAL-DOM WIDGETS
-
-
-var _Markdown_toHtml = F3(function(options, factList, rawMarkdown)
-{
-	return _VirtualDom_custom(
-		factList,
-		{
-			a: options,
-			b: rawMarkdown
-		},
-		_Markdown_render,
-		_Markdown_diff
-	);
-});
-
-
-
-// WIDGET IMPLEMENTATION
-
-
-function _Markdown_render(model)
-{
-	return A2(_Markdown_replace, model, _VirtualDom_doc.createElement('div'));
-}
-
-
-function _Markdown_diff(x, y)
-{
-	return x.b === y.b && x.a === y.a
-		? false
-		: _Markdown_replace(y);
-}
-
-
-var _Markdown_replace = F2(function(model, div)
-{
-	div.innerHTML = _Markdown_marked(model.b, _Markdown_formatOptions(model.a));
-	return div;
-});
-
-
-
-// ACTUAL MARKDOWN PARSER
-
-
-var _Markdown_marked = function() {
-	// catch the `marked` object regardless of the outer environment.
-	// (ex. a CommonJS module compatible environment.)
-	// note that this depends on marked's implementation of environment detection.
-	var module = {};
-	var exports = module.exports = {};
-
-	/**
-	 * marked - a markdown parser
-	 * Copyright (c) 2011-2014, Christopher Jeffrey. (MIT Licensed)
-	 * https://github.com/chjj/marked
-	 * commit cd2f6f5b7091154c5526e79b5f3bfb4d15995a51
-	 */
-	(function(){var block={newline:/^\n+/,code:/^( {4}[^\n]+\n*)+/,fences:noop,hr:/^( *[-*_]){3,} *(?:\n+|$)/,heading:/^ *(#{1,6}) *([^\n]+?) *#* *(?:\n+|$)/,nptable:noop,lheading:/^([^\n]+)\n *(=|-){2,} *(?:\n+|$)/,blockquote:/^( *>[^\n]+(\n(?!def)[^\n]+)*\n*)+/,list:/^( *)(bull) [\s\S]+?(?:hr|def|\n{2,}(?! )(?!\1bull )\n*|\s*$)/,html:/^ *(?:comment *(?:\n|\s*$)|closed *(?:\n{2,}|\s*$)|closing *(?:\n{2,}|\s*$))/,def:/^ *\[([^\]]+)\]: *<?([^\s>]+)>?(?: +["(]([^\n]+)[")])? *(?:\n+|$)/,table:noop,paragraph:/^((?:[^\n]+\n?(?!hr|heading|lheading|blockquote|tag|def))+)\n*/,text:/^[^\n]+/};block.bullet=/(?:[*+-]|\d+\.)/;block.item=/^( *)(bull) [^\n]*(?:\n(?!\1bull )[^\n]*)*/;block.item=replace(block.item,"gm")(/bull/g,block.bullet)();block.list=replace(block.list)(/bull/g,block.bullet)("hr","\\n+(?=\\1?(?:[-*_] *){3,}(?:\\n+|$))")("def","\\n+(?="+block.def.source+")")();block.blockquote=replace(block.blockquote)("def",block.def)();block._tag="(?!(?:"+"a|em|strong|small|s|cite|q|dfn|abbr|data|time|code"+"|var|samp|kbd|sub|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo"+"|span|br|wbr|ins|del|img)\\b)\\w+(?!:/|[^\\w\\s@]*@)\\b";block.html=replace(block.html)("comment",/<!--[\s\S]*?-->/)("closed",/<(tag)[\s\S]+?<\/\1>/)("closing",/<tag(?:"[^"]*"|'[^']*'|[^'">])*?>/)(/tag/g,block._tag)();block.paragraph=replace(block.paragraph)("hr",block.hr)("heading",block.heading)("lheading",block.lheading)("blockquote",block.blockquote)("tag","<"+block._tag)("def",block.def)();block.normal=merge({},block);block.gfm=merge({},block.normal,{fences:/^ *(`{3,}|~{3,})[ \.]*(\S+)? *\n([\s\S]*?)\s*\1 *(?:\n+|$)/,paragraph:/^/,heading:/^ *(#{1,6}) +([^\n]+?) *#* *(?:\n+|$)/});block.gfm.paragraph=replace(block.paragraph)("(?!","(?!"+block.gfm.fences.source.replace("\\1","\\2")+"|"+block.list.source.replace("\\1","\\3")+"|")();block.tables=merge({},block.gfm,{nptable:/^ *(\S.*\|.*)\n *([-:]+ *\|[-| :]*)\n((?:.*\|.*(?:\n|$))*)\n*/,table:/^ *\|(.+)\n *\|( *[-:]+[-| :]*)\n((?: *\|.*(?:\n|$))*)\n*/});function Lexer(options){this.tokens=[];this.tokens.links={};this.options=options||marked.defaults;this.rules=block.normal;if(this.options.gfm){if(this.options.tables){this.rules=block.tables}else{this.rules=block.gfm}}}Lexer.rules=block;Lexer.lex=function(src,options){var lexer=new Lexer(options);return lexer.lex(src)};Lexer.prototype.lex=function(src){src=src.replace(/\r\n|\r/g,"\n").replace(/\t/g,"    ").replace(/\u00a0/g," ").replace(/\u2424/g,"\n");return this.token(src,true)};Lexer.prototype.token=function(src,top,bq){var src=src.replace(/^ +$/gm,""),next,loose,cap,bull,b,item,space,i,l;while(src){if(cap=this.rules.newline.exec(src)){src=src.substring(cap[0].length);if(cap[0].length>1){this.tokens.push({type:"space"})}}if(cap=this.rules.code.exec(src)){src=src.substring(cap[0].length);cap=cap[0].replace(/^ {4}/gm,"");this.tokens.push({type:"code",text:!this.options.pedantic?cap.replace(/\n+$/,""):cap});continue}if(cap=this.rules.fences.exec(src)){src=src.substring(cap[0].length);this.tokens.push({type:"code",lang:cap[2],text:cap[3]||""});continue}if(cap=this.rules.heading.exec(src)){src=src.substring(cap[0].length);this.tokens.push({type:"heading",depth:cap[1].length,text:cap[2]});continue}if(top&&(cap=this.rules.nptable.exec(src))){src=src.substring(cap[0].length);item={type:"table",header:cap[1].replace(/^ *| *\| *$/g,"").split(/ *\| */),align:cap[2].replace(/^ *|\| *$/g,"").split(/ *\| */),cells:cap[3].replace(/\n$/,"").split("\n")};for(i=0;i<item.align.length;i++){if(/^ *-+: *$/.test(item.align[i])){item.align[i]="right"}else if(/^ *:-+: *$/.test(item.align[i])){item.align[i]="center"}else if(/^ *:-+ *$/.test(item.align[i])){item.align[i]="left"}else{item.align[i]=null}}for(i=0;i<item.cells.length;i++){item.cells[i]=item.cells[i].split(/ *\| */)}this.tokens.push(item);continue}if(cap=this.rules.lheading.exec(src)){src=src.substring(cap[0].length);this.tokens.push({type:"heading",depth:cap[2]==="="?1:2,text:cap[1]});continue}if(cap=this.rules.hr.exec(src)){src=src.substring(cap[0].length);this.tokens.push({type:"hr"});continue}if(cap=this.rules.blockquote.exec(src)){src=src.substring(cap[0].length);this.tokens.push({type:"blockquote_start"});cap=cap[0].replace(/^ *> ?/gm,"");this.token(cap,top,true);this.tokens.push({type:"blockquote_end"});continue}if(cap=this.rules.list.exec(src)){src=src.substring(cap[0].length);bull=cap[2];this.tokens.push({type:"list_start",ordered:bull.length>1});cap=cap[0].match(this.rules.item);next=false;l=cap.length;i=0;for(;i<l;i++){item=cap[i];space=item.length;item=item.replace(/^ *([*+-]|\d+\.) +/,"");if(~item.indexOf("\n ")){space-=item.length;item=!this.options.pedantic?item.replace(new RegExp("^ {1,"+space+"}","gm"),""):item.replace(/^ {1,4}/gm,"")}if(this.options.smartLists&&i!==l-1){b=block.bullet.exec(cap[i+1])[0];if(bull!==b&&!(bull.length>1&&b.length>1)){src=cap.slice(i+1).join("\n")+src;i=l-1}}loose=next||/\n\n(?!\s*$)/.test(item);if(i!==l-1){next=item.charAt(item.length-1)==="\n";if(!loose)loose=next}this.tokens.push({type:loose?"loose_item_start":"list_item_start"});this.token(item,false,bq);this.tokens.push({type:"list_item_end"})}this.tokens.push({type:"list_end"});continue}if(cap=this.rules.html.exec(src)){src=src.substring(cap[0].length);this.tokens.push({type:this.options.sanitize?"paragraph":"html",pre:!this.options.sanitizer&&(cap[1]==="pre"||cap[1]==="script"||cap[1]==="style"),text:cap[0]});continue}if(!bq&&top&&(cap=this.rules.def.exec(src))){src=src.substring(cap[0].length);this.tokens.links[cap[1].toLowerCase()]={href:cap[2],title:cap[3]};continue}if(top&&(cap=this.rules.table.exec(src))){src=src.substring(cap[0].length);item={type:"table",header:cap[1].replace(/^ *| *\| *$/g,"").split(/ *\| */),align:cap[2].replace(/^ *|\| *$/g,"").split(/ *\| */),cells:cap[3].replace(/(?: *\| *)?\n$/,"").split("\n")};for(i=0;i<item.align.length;i++){if(/^ *-+: *$/.test(item.align[i])){item.align[i]="right"}else if(/^ *:-+: *$/.test(item.align[i])){item.align[i]="center"}else if(/^ *:-+ *$/.test(item.align[i])){item.align[i]="left"}else{item.align[i]=null}}for(i=0;i<item.cells.length;i++){item.cells[i]=item.cells[i].replace(/^ *\| *| *\| *$/g,"").split(/ *\| */)}this.tokens.push(item);continue}if(top&&(cap=this.rules.paragraph.exec(src))){src=src.substring(cap[0].length);this.tokens.push({type:"paragraph",text:cap[1].charAt(cap[1].length-1)==="\n"?cap[1].slice(0,-1):cap[1]});continue}if(cap=this.rules.text.exec(src)){src=src.substring(cap[0].length);this.tokens.push({type:"text",text:cap[0]});continue}if(src){throw new Error("Infinite loop on byte: "+src.charCodeAt(0))}}return this.tokens};var inline={escape:/^\\([\\`*{}\[\]()#+\-.!_>])/,autolink:/^<([^ >]+(@|:\/)[^ >]+)>/,url:noop,tag:/^<!--[\s\S]*?-->|^<\/?\w+(?:"[^"]*"|'[^']*'|[^'">])*?>/,link:/^!?\[(inside)\]\(href\)/,reflink:/^!?\[(inside)\]\s*\[([^\]]*)\]/,nolink:/^!?\[((?:\[[^\]]*\]|[^\[\]])*)\]/,strong:/^_\_([\s\S]+?)_\_(?!_)|^\*\*([\s\S]+?)\*\*(?!\*)/,em:/^\b_((?:[^_]|_\_)+?)_\b|^\*((?:\*\*|[\s\S])+?)\*(?!\*)/,code:/^(`+)\s*([\s\S]*?[^`])\s*\1(?!`)/,br:/^ {2,}\n(?!\s*$)/,del:noop,text:/^[\s\S]+?(?=[\\<!\[_*`]| {2,}\n|$)/};inline._inside=/(?:\[[^\]]*\]|[^\[\]]|\](?=[^\[]*\]))*/;inline._href=/\s*<?([\s\S]*?)>?(?:\s+['"]([\s\S]*?)['"])?\s*/;inline.link=replace(inline.link)("inside",inline._inside)("href",inline._href)();inline.reflink=replace(inline.reflink)("inside",inline._inside)();inline.normal=merge({},inline);inline.pedantic=merge({},inline.normal,{strong:/^_\_(?=\S)([\s\S]*?\S)_\_(?!_)|^\*\*(?=\S)([\s\S]*?\S)\*\*(?!\*)/,em:/^_(?=\S)([\s\S]*?\S)_(?!_)|^\*(?=\S)([\s\S]*?\S)\*(?!\*)/});inline.gfm=merge({},inline.normal,{escape:replace(inline.escape)("])","~|])")(),url:/^(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/,del:/^~~(?=\S)([\s\S]*?\S)~~/,text:replace(inline.text)("]|","~]|")("|","|https?://|")()});inline.breaks=merge({},inline.gfm,{br:replace(inline.br)("{2,}","*")(),text:replace(inline.gfm.text)("{2,}","*")()});function InlineLexer(links,options){this.options=options||marked.defaults;this.links=links;this.rules=inline.normal;this.renderer=this.options.renderer||new Renderer;this.renderer.options=this.options;if(!this.links){throw new Error("Tokens array requires a `links` property.")}if(this.options.gfm){if(this.options.breaks){this.rules=inline.breaks}else{this.rules=inline.gfm}}else if(this.options.pedantic){this.rules=inline.pedantic}}InlineLexer.rules=inline;InlineLexer.output=function(src,links,options){var inline=new InlineLexer(links,options);return inline.output(src)};InlineLexer.prototype.output=function(src){var out="",link,text,href,cap;while(src){if(cap=this.rules.escape.exec(src)){src=src.substring(cap[0].length);out+=cap[1];continue}if(cap=this.rules.autolink.exec(src)){src=src.substring(cap[0].length);if(cap[2]==="@"){text=cap[1].charAt(6)===":"?this.mangle(cap[1].substring(7)):this.mangle(cap[1]);href=this.mangle("mailto:")+text}else{text=escape(cap[1]);href=text}out+=this.renderer.link(href,null,text);continue}if(!this.inLink&&(cap=this.rules.url.exec(src))){src=src.substring(cap[0].length);text=escape(cap[1]);href=text;out+=this.renderer.link(href,null,text);continue}if(cap=this.rules.tag.exec(src)){if(!this.inLink&&/^<a /i.test(cap[0])){this.inLink=true}else if(this.inLink&&/^<\/a>/i.test(cap[0])){this.inLink=false}src=src.substring(cap[0].length);out+=this.options.sanitize?this.options.sanitizer?this.options.sanitizer(cap[0]):escape(cap[0]):cap[0];continue}if(cap=this.rules.link.exec(src)){src=src.substring(cap[0].length);this.inLink=true;out+=this.outputLink(cap,{href:cap[2],title:cap[3]});this.inLink=false;continue}if((cap=this.rules.reflink.exec(src))||(cap=this.rules.nolink.exec(src))){src=src.substring(cap[0].length);link=(cap[2]||cap[1]).replace(/\s+/g," ");link=this.links[link.toLowerCase()];if(!link||!link.href){out+=cap[0].charAt(0);src=cap[0].substring(1)+src;continue}this.inLink=true;out+=this.outputLink(cap,link);this.inLink=false;continue}if(cap=this.rules.strong.exec(src)){src=src.substring(cap[0].length);out+=this.renderer.strong(this.output(cap[2]||cap[1]));continue}if(cap=this.rules.em.exec(src)){src=src.substring(cap[0].length);out+=this.renderer.em(this.output(cap[2]||cap[1]));continue}if(cap=this.rules.code.exec(src)){src=src.substring(cap[0].length);out+=this.renderer.codespan(escape(cap[2],true));continue}if(cap=this.rules.br.exec(src)){src=src.substring(cap[0].length);out+=this.renderer.br();continue}if(cap=this.rules.del.exec(src)){src=src.substring(cap[0].length);out+=this.renderer.del(this.output(cap[1]));continue}if(cap=this.rules.text.exec(src)){src=src.substring(cap[0].length);out+=this.renderer.text(escape(this.smartypants(cap[0])));continue}if(src){throw new Error("Infinite loop on byte: "+src.charCodeAt(0))}}return out};InlineLexer.prototype.outputLink=function(cap,link){var href=escape(link.href),title=link.title?escape(link.title):null;return cap[0].charAt(0)!=="!"?this.renderer.link(href,title,this.output(cap[1])):this.renderer.image(href,title,escape(cap[1]))};InlineLexer.prototype.smartypants=function(text){if(!this.options.smartypants)return text;return text.replace(/---/g,"—").replace(/--/g,"–").replace(/(^|[-\u2014\/(\[{"\s])'/g,"$1‘").replace(/'/g,"’").replace(/(^|[-\u2014\/(\[{\u2018\s])"/g,"$1“").replace(/"/g,"”").replace(/\.{3}/g,"…")};InlineLexer.prototype.mangle=function(text){if(!this.options.mangle)return text;var out="",l=text.length,i=0,ch;for(;i<l;i++){ch=text.charCodeAt(i);if(Math.random()>.5){ch="x"+ch.toString(16)}out+="&#"+ch+";"}return out};function Renderer(options){this.options=options||{}}Renderer.prototype.code=function(code,lang,escaped){if(this.options.highlight){var out=this.options.highlight(code,lang);if(out!=null&&out!==code){escaped=true;code=out}}if(!lang){return"<pre><code>"+(escaped?code:escape(code,true))+"\n</code></pre>"}return'<pre><code class="'+this.options.langPrefix+escape(lang,true)+'">'+(escaped?code:escape(code,true))+"\n</code></pre>\n"};Renderer.prototype.blockquote=function(quote){return"<blockquote>\n"+quote+"</blockquote>\n"};Renderer.prototype.html=function(html){return html};Renderer.prototype.heading=function(text,level,raw){return"<h"+level+' id="'+this.options.headerPrefix+raw.toLowerCase().replace(/[^\w]+/g,"-")+'">'+text+"</h"+level+">\n"};Renderer.prototype.hr=function(){return this.options.xhtml?"<hr/>\n":"<hr>\n"};Renderer.prototype.list=function(body,ordered){var type=ordered?"ol":"ul";return"<"+type+">\n"+body+"</"+type+">\n"};Renderer.prototype.listitem=function(text){return"<li>"+text+"</li>\n"};Renderer.prototype.paragraph=function(text){return"<p>"+text+"</p>\n"};Renderer.prototype.table=function(header,body){return"<table>\n"+"<thead>\n"+header+"</thead>\n"+"<tbody>\n"+body+"</tbody>\n"+"</table>\n"};Renderer.prototype.tablerow=function(content){return"<tr>\n"+content+"</tr>\n"};Renderer.prototype.tablecell=function(content,flags){var type=flags.header?"th":"td";var tag=flags.align?"<"+type+' style="text-align:'+flags.align+'">':"<"+type+">";return tag+content+"</"+type+">\n"};Renderer.prototype.strong=function(text){return"<strong>"+text+"</strong>"};Renderer.prototype.em=function(text){return"<em>"+text+"</em>"};Renderer.prototype.codespan=function(text){return"<code>"+text+"</code>"};Renderer.prototype.br=function(){return this.options.xhtml?"<br/>":"<br>"};Renderer.prototype.del=function(text){return"<del>"+text+"</del>"};Renderer.prototype.link=function(href,title,text){if(this.options.sanitize){try{var prot=decodeURIComponent(unescape(href)).replace(/[^\w:]/g,"").toLowerCase()}catch(e){return""}if(prot.indexOf("javascript:")===0||prot.indexOf("vbscript:")===0||prot.indexOf("data:")===0){return""}}var out='<a href="'+href+'"';if(title){out+=' title="'+title+'"'}out+=">"+text+"</a>";return out};Renderer.prototype.image=function(href,title,text){var out='<img src="'+href+'" alt="'+text+'"';if(title){out+=' title="'+title+'"'}out+=this.options.xhtml?"/>":">";return out};Renderer.prototype.text=function(text){return text};function Parser(options){this.tokens=[];this.token=null;this.options=options||marked.defaults;this.options.renderer=this.options.renderer||new Renderer;this.renderer=this.options.renderer;this.renderer.options=this.options}Parser.parse=function(src,options,renderer){var parser=new Parser(options,renderer);return parser.parse(src)};Parser.prototype.parse=function(src){this.inline=new InlineLexer(src.links,this.options,this.renderer);this.tokens=src.reverse();var out="";while(this.next()){out+=this.tok()}return out};Parser.prototype.next=function(){return this.token=this.tokens.pop()};Parser.prototype.peek=function(){return this.tokens[this.tokens.length-1]||0};Parser.prototype.parseText=function(){var body=this.token.text;while(this.peek().type==="text"){body+="\n"+this.next().text}return this.inline.output(body)};Parser.prototype.tok=function(){switch(this.token.type){case"space":{return""}case"hr":{return this.renderer.hr()}case"heading":{return this.renderer.heading(this.inline.output(this.token.text),this.token.depth,this.token.text)}case"code":{return this.renderer.code(this.token.text,this.token.lang,this.token.escaped)}case"table":{var header="",body="",i,row,cell,flags,j;cell="";for(i=0;i<this.token.header.length;i++){flags={header:true,align:this.token.align[i]};cell+=this.renderer.tablecell(this.inline.output(this.token.header[i]),{header:true,align:this.token.align[i]})}header+=this.renderer.tablerow(cell);for(i=0;i<this.token.cells.length;i++){row=this.token.cells[i];cell="";for(j=0;j<row.length;j++){cell+=this.renderer.tablecell(this.inline.output(row[j]),{header:false,align:this.token.align[j]})}body+=this.renderer.tablerow(cell)}return this.renderer.table(header,body)}case"blockquote_start":{var body="";while(this.next().type!=="blockquote_end"){body+=this.tok()}return this.renderer.blockquote(body)}case"list_start":{var body="",ordered=this.token.ordered;while(this.next().type!=="list_end"){body+=this.tok()}return this.renderer.list(body,ordered)}case"list_item_start":{var body="";while(this.next().type!=="list_item_end"){body+=this.token.type==="text"?this.parseText():this.tok()}return this.renderer.listitem(body)}case"loose_item_start":{var body="";while(this.next().type!=="list_item_end"){body+=this.tok()}return this.renderer.listitem(body)}case"html":{var html=!this.token.pre&&!this.options.pedantic?this.inline.output(this.token.text):this.token.text;return this.renderer.html(html)}case"paragraph":{return this.renderer.paragraph(this.inline.output(this.token.text))}case"text":{return this.renderer.paragraph(this.parseText())}}};function escape(html,encode){return html.replace(!encode?/&(?!#?\w+;)/g:/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;")}function unescape(html){return html.replace(/&(#(?:\d+)|(?:#x[0-9A-Fa-f]+)|(?:\w+));?/g,function(_,n){n=n.toLowerCase();if(n==="colon")return":";if(n.charAt(0)==="#"){return n.charAt(1)==="x"?String.fromCharCode(parseInt(n.substring(2),16)):String.fromCharCode(+n.substring(1))}return""})}function replace(regex,opt){regex=regex.source;opt=opt||"";return function self(name,val){if(!name)return new RegExp(regex,opt);val=val.source||val;val=val.replace(/(^|[^\[])\^/g,"$1");regex=regex.replace(name,val);return self}}function noop(){}noop.exec=noop;function merge(obj){var i=1,target,key;for(;i<arguments.length;i++){target=arguments[i];for(key in target){if(Object.prototype.hasOwnProperty.call(target,key)){obj[key]=target[key]}}}return obj}function marked(src,opt,callback){if(callback||typeof opt==="function"){if(!callback){callback=opt;opt=null}opt=merge({},marked.defaults,opt||{});var highlight=opt.highlight,tokens,pending,i=0;try{tokens=Lexer.lex(src,opt)}catch(e){return callback(e)}pending=tokens.length;var done=function(err){if(err){opt.highlight=highlight;return callback(err)}var out;try{out=Parser.parse(tokens,opt)}catch(e){err=e}opt.highlight=highlight;return err?callback(err):callback(null,out)};if(!highlight||highlight.length<3){return done()}delete opt.highlight;if(!pending)return done();for(;i<tokens.length;i++){(function(token){if(token.type!=="code"){return--pending||done()}return highlight(token.text,token.lang,function(err,code){if(err)return done(err);if(code==null||code===token.text){return--pending||done()}token.text=code;token.escaped=true;--pending||done()})})(tokens[i])}return}try{if(opt)opt=merge({},marked.defaults,opt);return Parser.parse(Lexer.lex(src,opt),opt)}catch(e){e.message+="\nPlease report this to https://github.com/chjj/marked.";if((opt||marked.defaults).silent){return"<p>An error occured:</p><pre>"+escape(e.message+"",true)+"</pre>"}throw e}}marked.options=marked.setOptions=function(opt){merge(marked.defaults,opt);return marked};marked.defaults={gfm:true,tables:true,breaks:false,pedantic:false,sanitize:false,sanitizer:null,mangle:true,smartLists:false,silent:false,highlight:null,langPrefix:"lang-",smartypants:false,headerPrefix:"",renderer:new Renderer,xhtml:false};marked.Parser=Parser;marked.parser=Parser.parse;marked.Renderer=Renderer;marked.Lexer=Lexer;marked.lexer=Lexer.lex;marked.InlineLexer=InlineLexer;marked.inlineLexer=InlineLexer.output;marked.parse=marked;if(typeof module!=="undefined"&&typeof exports==="object"){module.exports=marked}else if(typeof define==="function"&&define.amd){define(function(){return marked})}else{this.marked=marked}}).call(function(){return this||(typeof window!=="undefined"?window:global)}());
-
-	return module.exports;
-}();
-
-
-// FORMAT OPTIONS FOR MARKED IMPLEMENTATION
-
-function _Markdown_formatOptions(options)
-{
-	function toHighlight(code, lang)
-	{
-		if (!lang && elm$core$Maybe$isJust(options.X))
-		{
-			lang = options.X.a;
-		}
-
-		if (typeof hljs !== 'undefined' && lang && hljs.listLanguages().indexOf(lang) >= 0)
-		{
-			return hljs.highlight(lang, code, true).value;
-		}
-
-		return code;
-	}
-
-	var gfm = options.aa.a;
-
-	return {
-		highlight: toHighlight,
-		gfm: gfm,
-		tables: gfm && gfm.a_,
-		breaks: gfm && gfm.ay,
-		sanitize: options.ao,
-		smartypants: options.aq
-	};
-}
-
-
-
-
 // ELEMENT
 
 
@@ -3966,11 +3884,11 @@ var _Browser_element = _Debugger_element || F4(function(impl, flagDecoder, debug
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.aK,
-		impl.a$,
-		impl.aZ,
+		impl.aR,
+		impl.a6,
+		impl.a4,
 		function(sendToApp, initialModel) {
-			var view = impl.a1;
+			var view = impl.a8;
 			/**/
 			var domNode = args['node'];
 			//*/
@@ -4002,12 +3920,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 	return _Platform_initialize(
 		flagDecoder,
 		args,
-		impl.aK,
-		impl.a$,
-		impl.aZ,
+		impl.aR,
+		impl.a6,
+		impl.a4,
 		function(sendToApp, initialModel) {
-			var divertHrefToApp = impl.F && impl.F(sendToApp)
-			var view = impl.a1;
+			var divertHrefToApp = impl.E && impl.E(sendToApp)
+			var view = impl.a8;
 			var title = _VirtualDom_doc.title;
 			var bodyNode = _VirtualDom_doc.body;
 			var currNode = _VirtualDom_virtualize(bodyNode);
@@ -4015,12 +3933,12 @@ var _Browser_document = _Debugger_document || F4(function(impl, flagDecoder, deb
 			{
 				_VirtualDom_divertHrefToApp = divertHrefToApp;
 				var doc = view(model);
-				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc.ax);
+				var nextNode = _VirtualDom_node('body')(_List_Nil)(doc._);
 				var patches = _VirtualDom_diff(currNode, nextNode);
 				bodyNode = _VirtualDom_applyPatches(bodyNode, currNode, patches, sendToApp);
 				currNode = nextNode;
 				_VirtualDom_divertHrefToApp = 0;
-				(title !== doc.at) && (_VirtualDom_doc.title = title = doc.at);
+				(title !== doc.Y) && (_VirtualDom_doc.title = title = doc.Y);
 			});
 		}
 	);
@@ -4071,12 +3989,12 @@ function _Browser_makeAnimator(model, draw)
 
 function _Browser_application(impl)
 {
-	var onUrlChange = impl.aU;
-	var onUrlRequest = impl.aV;
+	var onUrlChange = impl.aX;
+	var onUrlRequest = impl.aY;
 	var key = function() { key.a(onUrlChange(_Browser_getUrl())); };
 
 	return _Browser_document({
-		F: function(sendToApp)
+		E: function(sendToApp)
 		{
 			key.a = sendToApp;
 			_Browser_window.addEventListener('popstate', key);
@@ -4092,9 +4010,9 @@ function _Browser_application(impl)
 					var next = elm$url$Url$fromString(href).a;
 					sendToApp(onUrlRequest(
 						(next
-							&& curr.ak === next.ak
-							&& curr.ab === next.ab
-							&& curr.ah.a === next.ah.a
+							&& curr.au === next.au
+							&& curr.ai === next.ai
+							&& curr.ar.a === next.ar.a
 						)
 							? elm$browser$Browser$Internal(next)
 							: elm$browser$Browser$External(href)
@@ -4102,13 +4020,13 @@ function _Browser_application(impl)
 				}
 			});
 		},
-		aK: function(flags)
+		aR: function(flags)
 		{
-			return A3(impl.aK, flags, _Browser_getUrl(), key);
+			return A3(impl.aR, flags, _Browser_getUrl(), key);
 		},
-		a1: impl.a1,
-		a$: impl.a$,
-		aZ: impl.aZ
+		a8: impl.a8,
+		a6: impl.a6,
+		a4: impl.a4
 	});
 }
 
@@ -4174,17 +4092,17 @@ var _Browser_decodeEvent = F2(function(decoder, event)
 function _Browser_visibilityInfo()
 {
 	return (typeof _VirtualDom_doc.hidden !== 'undefined')
-		? { aI: 'hidden', C: 'visibilitychange' }
+		? { aO: 'hidden', C: 'visibilitychange' }
 		:
 	(typeof _VirtualDom_doc.mozHidden !== 'undefined')
-		? { aI: 'mozHidden', C: 'mozvisibilitychange' }
+		? { aO: 'mozHidden', C: 'mozvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.msHidden !== 'undefined')
-		? { aI: 'msHidden', C: 'msvisibilitychange' }
+		? { aO: 'msHidden', C: 'msvisibilitychange' }
 		:
 	(typeof _VirtualDom_doc.webkitHidden !== 'undefined')
-		? { aI: 'webkitHidden', C: 'webkitvisibilitychange' }
-		: { aI: 'hidden', C: 'visibilitychange' };
+		? { aO: 'webkitHidden', C: 'webkitvisibilitychange' }
+		: { aO: 'hidden', C: 'visibilitychange' };
 }
 
 
@@ -4265,12 +4183,12 @@ var _Browser_call = F2(function(functionName, id)
 function _Browser_getViewport()
 {
 	return {
-		ap: _Browser_getScene(),
-		au: {
-			K: _Browser_window.pageXOffset,
-			L: _Browser_window.pageYOffset,
+		az: _Browser_getScene(),
+		aD: {
+			L: _Browser_window.pageXOffset,
+			M: _Browser_window.pageYOffset,
 			A: _Browser_doc.documentElement.clientWidth,
-			v: _Browser_doc.documentElement.clientHeight
+			u: _Browser_doc.documentElement.clientHeight
 		}
 	};
 }
@@ -4281,7 +4199,7 @@ function _Browser_getScene()
 	var elem = _Browser_doc.documentElement;
 	return {
 		A: Math.max(body.scrollWidth, body.offsetWidth, elem.scrollWidth, elem.offsetWidth, elem.clientWidth),
-		v: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
+		u: Math.max(body.scrollHeight, body.offsetHeight, elem.scrollHeight, elem.offsetHeight, elem.clientHeight)
 	};
 }
 
@@ -4304,15 +4222,15 @@ function _Browser_getViewportOf(id)
 	return _Browser_withNode(id, function(node)
 	{
 		return {
-			ap: {
+			az: {
 				A: node.scrollWidth,
-				v: node.scrollHeight
+				u: node.scrollHeight
 			},
-			au: {
-				K: node.scrollLeft,
-				L: node.scrollTop,
+			aD: {
+				L: node.scrollLeft,
+				M: node.scrollTop,
 				A: node.clientWidth,
-				v: node.clientHeight
+				u: node.clientHeight
 			}
 		};
 	});
@@ -4342,18 +4260,18 @@ function _Browser_getElement(id)
 		var x = _Browser_window.pageXOffset;
 		var y = _Browser_window.pageYOffset;
 		return {
-			ap: _Browser_getScene(),
-			au: {
-				K: x,
-				L: y,
+			az: _Browser_getScene(),
+			aD: {
+				L: x,
+				M: y,
 				A: _Browser_doc.documentElement.clientWidth,
-				v: _Browser_doc.documentElement.clientHeight
+				u: _Browser_doc.documentElement.clientHeight
 			},
-			aE: {
-				K: x + rect.left,
-				L: y + rect.top,
+			aK: {
+				L: x + rect.left,
+				M: y + rect.top,
 				A: rect.width,
-				v: rect.height
+				u: rect.height
 			}
 		};
 	});
@@ -4388,35 +4306,155 @@ function _Browser_load(url)
 		}
 	}));
 }
-var author$project$ClientTypes$Loaded = {$: 1};
-var elm$core$Elm$JsArray$foldr = _JsArray_foldr;
-var elm$core$Array$foldr = F3(
-	function (func, baseCase, _n0) {
-		var tree = _n0.c;
-		var tail = _n0.d;
-		var helper = F2(
-			function (node, acc) {
-				if (!node.$) {
-					var subTree = node.a;
-					return A3(elm$core$Elm$JsArray$foldr, helper, acc, subTree);
-				} else {
-					var values = node.a;
-					return A3(elm$core$Elm$JsArray$foldr, func, acc, values);
-				}
-			});
-		return A3(
-			elm$core$Elm$JsArray$foldr,
-			helper,
-			A3(elm$core$Elm$JsArray$foldr, func, baseCase, tail),
-			tree);
-	});
-var elm$core$Basics$EQ = 1;
-var elm$core$Basics$LT = 0;
-var elm$core$List$cons = _List_cons;
-var elm$core$Array$toList = function (array) {
-	return A3(elm$core$Array$foldr, elm$core$List$cons, _List_Nil, array);
+
+
+
+
+// VIRTUAL-DOM WIDGETS
+
+
+var _Markdown_toHtml = F3(function(options, factList, rawMarkdown)
+{
+	return _VirtualDom_custom(
+		factList,
+		{
+			a: options,
+			b: rawMarkdown
+		},
+		_Markdown_render,
+		_Markdown_diff
+	);
+});
+
+
+
+// WIDGET IMPLEMENTATION
+
+
+function _Markdown_render(model)
+{
+	return A2(_Markdown_replace, model, _VirtualDom_doc.createElement('div'));
+}
+
+
+function _Markdown_diff(x, y)
+{
+	return x.b === y.b && x.a === y.a
+		? false
+		: _Markdown_replace(y);
+}
+
+
+var _Markdown_replace = F2(function(model, div)
+{
+	div.innerHTML = _Markdown_marked(model.b, _Markdown_formatOptions(model.a));
+	return div;
+});
+
+
+
+// ACTUAL MARKDOWN PARSER
+
+
+var _Markdown_marked = function() {
+	// catch the `marked` object regardless of the outer environment.
+	// (ex. a CommonJS module compatible environment.)
+	// note that this depends on marked's implementation of environment detection.
+	var module = {};
+	var exports = module.exports = {};
+
+	/**
+	 * marked - a markdown parser
+	 * Copyright (c) 2011-2014, Christopher Jeffrey. (MIT Licensed)
+	 * https://github.com/chjj/marked
+	 * commit cd2f6f5b7091154c5526e79b5f3bfb4d15995a51
+	 */
+	(function(){var block={newline:/^\n+/,code:/^( {4}[^\n]+\n*)+/,fences:noop,hr:/^( *[-*_]){3,} *(?:\n+|$)/,heading:/^ *(#{1,6}) *([^\n]+?) *#* *(?:\n+|$)/,nptable:noop,lheading:/^([^\n]+)\n *(=|-){2,} *(?:\n+|$)/,blockquote:/^( *>[^\n]+(\n(?!def)[^\n]+)*\n*)+/,list:/^( *)(bull) [\s\S]+?(?:hr|def|\n{2,}(?! )(?!\1bull )\n*|\s*$)/,html:/^ *(?:comment *(?:\n|\s*$)|closed *(?:\n{2,}|\s*$)|closing *(?:\n{2,}|\s*$))/,def:/^ *\[([^\]]+)\]: *<?([^\s>]+)>?(?: +["(]([^\n]+)[")])? *(?:\n+|$)/,table:noop,paragraph:/^((?:[^\n]+\n?(?!hr|heading|lheading|blockquote|tag|def))+)\n*/,text:/^[^\n]+/};block.bullet=/(?:[*+-]|\d+\.)/;block.item=/^( *)(bull) [^\n]*(?:\n(?!\1bull )[^\n]*)*/;block.item=replace(block.item,"gm")(/bull/g,block.bullet)();block.list=replace(block.list)(/bull/g,block.bullet)("hr","\\n+(?=\\1?(?:[-*_] *){3,}(?:\\n+|$))")("def","\\n+(?="+block.def.source+")")();block.blockquote=replace(block.blockquote)("def",block.def)();block._tag="(?!(?:"+"a|em|strong|small|s|cite|q|dfn|abbr|data|time|code"+"|var|samp|kbd|sub|sup|i|b|u|mark|ruby|rt|rp|bdi|bdo"+"|span|br|wbr|ins|del|img)\\b)\\w+(?!:/|[^\\w\\s@]*@)\\b";block.html=replace(block.html)("comment",/<!--[\s\S]*?-->/)("closed",/<(tag)[\s\S]+?<\/\1>/)("closing",/<tag(?:"[^"]*"|'[^']*'|[^'">])*?>/)(/tag/g,block._tag)();block.paragraph=replace(block.paragraph)("hr",block.hr)("heading",block.heading)("lheading",block.lheading)("blockquote",block.blockquote)("tag","<"+block._tag)("def",block.def)();block.normal=merge({},block);block.gfm=merge({},block.normal,{fences:/^ *(`{3,}|~{3,})[ \.]*(\S+)? *\n([\s\S]*?)\s*\1 *(?:\n+|$)/,paragraph:/^/,heading:/^ *(#{1,6}) +([^\n]+?) *#* *(?:\n+|$)/});block.gfm.paragraph=replace(block.paragraph)("(?!","(?!"+block.gfm.fences.source.replace("\\1","\\2")+"|"+block.list.source.replace("\\1","\\3")+"|")();block.tables=merge({},block.gfm,{nptable:/^ *(\S.*\|.*)\n *([-:]+ *\|[-| :]*)\n((?:.*\|.*(?:\n|$))*)\n*/,table:/^ *\|(.+)\n *\|( *[-:]+[-| :]*)\n((?: *\|.*(?:\n|$))*)\n*/});function Lexer(options){this.tokens=[];this.tokens.links={};this.options=options||marked.defaults;this.rules=block.normal;if(this.options.gfm){if(this.options.tables){this.rules=block.tables}else{this.rules=block.gfm}}}Lexer.rules=block;Lexer.lex=function(src,options){var lexer=new Lexer(options);return lexer.lex(src)};Lexer.prototype.lex=function(src){src=src.replace(/\r\n|\r/g,"\n").replace(/\t/g,"    ").replace(/\u00a0/g," ").replace(/\u2424/g,"\n");return this.token(src,true)};Lexer.prototype.token=function(src,top,bq){var src=src.replace(/^ +$/gm,""),next,loose,cap,bull,b,item,space,i,l;while(src){if(cap=this.rules.newline.exec(src)){src=src.substring(cap[0].length);if(cap[0].length>1){this.tokens.push({type:"space"})}}if(cap=this.rules.code.exec(src)){src=src.substring(cap[0].length);cap=cap[0].replace(/^ {4}/gm,"");this.tokens.push({type:"code",text:!this.options.pedantic?cap.replace(/\n+$/,""):cap});continue}if(cap=this.rules.fences.exec(src)){src=src.substring(cap[0].length);this.tokens.push({type:"code",lang:cap[2],text:cap[3]||""});continue}if(cap=this.rules.heading.exec(src)){src=src.substring(cap[0].length);this.tokens.push({type:"heading",depth:cap[1].length,text:cap[2]});continue}if(top&&(cap=this.rules.nptable.exec(src))){src=src.substring(cap[0].length);item={type:"table",header:cap[1].replace(/^ *| *\| *$/g,"").split(/ *\| */),align:cap[2].replace(/^ *|\| *$/g,"").split(/ *\| */),cells:cap[3].replace(/\n$/,"").split("\n")};for(i=0;i<item.align.length;i++){if(/^ *-+: *$/.test(item.align[i])){item.align[i]="right"}else if(/^ *:-+: *$/.test(item.align[i])){item.align[i]="center"}else if(/^ *:-+ *$/.test(item.align[i])){item.align[i]="left"}else{item.align[i]=null}}for(i=0;i<item.cells.length;i++){item.cells[i]=item.cells[i].split(/ *\| */)}this.tokens.push(item);continue}if(cap=this.rules.lheading.exec(src)){src=src.substring(cap[0].length);this.tokens.push({type:"heading",depth:cap[2]==="="?1:2,text:cap[1]});continue}if(cap=this.rules.hr.exec(src)){src=src.substring(cap[0].length);this.tokens.push({type:"hr"});continue}if(cap=this.rules.blockquote.exec(src)){src=src.substring(cap[0].length);this.tokens.push({type:"blockquote_start"});cap=cap[0].replace(/^ *> ?/gm,"");this.token(cap,top,true);this.tokens.push({type:"blockquote_end"});continue}if(cap=this.rules.list.exec(src)){src=src.substring(cap[0].length);bull=cap[2];this.tokens.push({type:"list_start",ordered:bull.length>1});cap=cap[0].match(this.rules.item);next=false;l=cap.length;i=0;for(;i<l;i++){item=cap[i];space=item.length;item=item.replace(/^ *([*+-]|\d+\.) +/,"");if(~item.indexOf("\n ")){space-=item.length;item=!this.options.pedantic?item.replace(new RegExp("^ {1,"+space+"}","gm"),""):item.replace(/^ {1,4}/gm,"")}if(this.options.smartLists&&i!==l-1){b=block.bullet.exec(cap[i+1])[0];if(bull!==b&&!(bull.length>1&&b.length>1)){src=cap.slice(i+1).join("\n")+src;i=l-1}}loose=next||/\n\n(?!\s*$)/.test(item);if(i!==l-1){next=item.charAt(item.length-1)==="\n";if(!loose)loose=next}this.tokens.push({type:loose?"loose_item_start":"list_item_start"});this.token(item,false,bq);this.tokens.push({type:"list_item_end"})}this.tokens.push({type:"list_end"});continue}if(cap=this.rules.html.exec(src)){src=src.substring(cap[0].length);this.tokens.push({type:this.options.sanitize?"paragraph":"html",pre:!this.options.sanitizer&&(cap[1]==="pre"||cap[1]==="script"||cap[1]==="style"),text:cap[0]});continue}if(!bq&&top&&(cap=this.rules.def.exec(src))){src=src.substring(cap[0].length);this.tokens.links[cap[1].toLowerCase()]={href:cap[2],title:cap[3]};continue}if(top&&(cap=this.rules.table.exec(src))){src=src.substring(cap[0].length);item={type:"table",header:cap[1].replace(/^ *| *\| *$/g,"").split(/ *\| */),align:cap[2].replace(/^ *|\| *$/g,"").split(/ *\| */),cells:cap[3].replace(/(?: *\| *)?\n$/,"").split("\n")};for(i=0;i<item.align.length;i++){if(/^ *-+: *$/.test(item.align[i])){item.align[i]="right"}else if(/^ *:-+: *$/.test(item.align[i])){item.align[i]="center"}else if(/^ *:-+ *$/.test(item.align[i])){item.align[i]="left"}else{item.align[i]=null}}for(i=0;i<item.cells.length;i++){item.cells[i]=item.cells[i].replace(/^ *\| *| *\| *$/g,"").split(/ *\| */)}this.tokens.push(item);continue}if(top&&(cap=this.rules.paragraph.exec(src))){src=src.substring(cap[0].length);this.tokens.push({type:"paragraph",text:cap[1].charAt(cap[1].length-1)==="\n"?cap[1].slice(0,-1):cap[1]});continue}if(cap=this.rules.text.exec(src)){src=src.substring(cap[0].length);this.tokens.push({type:"text",text:cap[0]});continue}if(src){throw new Error("Infinite loop on byte: "+src.charCodeAt(0))}}return this.tokens};var inline={escape:/^\\([\\`*{}\[\]()#+\-.!_>])/,autolink:/^<([^ >]+(@|:\/)[^ >]+)>/,url:noop,tag:/^<!--[\s\S]*?-->|^<\/?\w+(?:"[^"]*"|'[^']*'|[^'">])*?>/,link:/^!?\[(inside)\]\(href\)/,reflink:/^!?\[(inside)\]\s*\[([^\]]*)\]/,nolink:/^!?\[((?:\[[^\]]*\]|[^\[\]])*)\]/,strong:/^_\_([\s\S]+?)_\_(?!_)|^\*\*([\s\S]+?)\*\*(?!\*)/,em:/^\b_((?:[^_]|_\_)+?)_\b|^\*((?:\*\*|[\s\S])+?)\*(?!\*)/,code:/^(`+)\s*([\s\S]*?[^`])\s*\1(?!`)/,br:/^ {2,}\n(?!\s*$)/,del:noop,text:/^[\s\S]+?(?=[\\<!\[_*`]| {2,}\n|$)/};inline._inside=/(?:\[[^\]]*\]|[^\[\]]|\](?=[^\[]*\]))*/;inline._href=/\s*<?([\s\S]*?)>?(?:\s+['"]([\s\S]*?)['"])?\s*/;inline.link=replace(inline.link)("inside",inline._inside)("href",inline._href)();inline.reflink=replace(inline.reflink)("inside",inline._inside)();inline.normal=merge({},inline);inline.pedantic=merge({},inline.normal,{strong:/^_\_(?=\S)([\s\S]*?\S)_\_(?!_)|^\*\*(?=\S)([\s\S]*?\S)\*\*(?!\*)/,em:/^_(?=\S)([\s\S]*?\S)_(?!_)|^\*(?=\S)([\s\S]*?\S)\*(?!\*)/});inline.gfm=merge({},inline.normal,{escape:replace(inline.escape)("])","~|])")(),url:/^(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/,del:/^~~(?=\S)([\s\S]*?\S)~~/,text:replace(inline.text)("]|","~]|")("|","|https?://|")()});inline.breaks=merge({},inline.gfm,{br:replace(inline.br)("{2,}","*")(),text:replace(inline.gfm.text)("{2,}","*")()});function InlineLexer(links,options){this.options=options||marked.defaults;this.links=links;this.rules=inline.normal;this.renderer=this.options.renderer||new Renderer;this.renderer.options=this.options;if(!this.links){throw new Error("Tokens array requires a `links` property.")}if(this.options.gfm){if(this.options.breaks){this.rules=inline.breaks}else{this.rules=inline.gfm}}else if(this.options.pedantic){this.rules=inline.pedantic}}InlineLexer.rules=inline;InlineLexer.output=function(src,links,options){var inline=new InlineLexer(links,options);return inline.output(src)};InlineLexer.prototype.output=function(src){var out="",link,text,href,cap;while(src){if(cap=this.rules.escape.exec(src)){src=src.substring(cap[0].length);out+=cap[1];continue}if(cap=this.rules.autolink.exec(src)){src=src.substring(cap[0].length);if(cap[2]==="@"){text=cap[1].charAt(6)===":"?this.mangle(cap[1].substring(7)):this.mangle(cap[1]);href=this.mangle("mailto:")+text}else{text=escape(cap[1]);href=text}out+=this.renderer.link(href,null,text);continue}if(!this.inLink&&(cap=this.rules.url.exec(src))){src=src.substring(cap[0].length);text=escape(cap[1]);href=text;out+=this.renderer.link(href,null,text);continue}if(cap=this.rules.tag.exec(src)){if(!this.inLink&&/^<a /i.test(cap[0])){this.inLink=true}else if(this.inLink&&/^<\/a>/i.test(cap[0])){this.inLink=false}src=src.substring(cap[0].length);out+=this.options.sanitize?this.options.sanitizer?this.options.sanitizer(cap[0]):escape(cap[0]):cap[0];continue}if(cap=this.rules.link.exec(src)){src=src.substring(cap[0].length);this.inLink=true;out+=this.outputLink(cap,{href:cap[2],title:cap[3]});this.inLink=false;continue}if((cap=this.rules.reflink.exec(src))||(cap=this.rules.nolink.exec(src))){src=src.substring(cap[0].length);link=(cap[2]||cap[1]).replace(/\s+/g," ");link=this.links[link.toLowerCase()];if(!link||!link.href){out+=cap[0].charAt(0);src=cap[0].substring(1)+src;continue}this.inLink=true;out+=this.outputLink(cap,link);this.inLink=false;continue}if(cap=this.rules.strong.exec(src)){src=src.substring(cap[0].length);out+=this.renderer.strong(this.output(cap[2]||cap[1]));continue}if(cap=this.rules.em.exec(src)){src=src.substring(cap[0].length);out+=this.renderer.em(this.output(cap[2]||cap[1]));continue}if(cap=this.rules.code.exec(src)){src=src.substring(cap[0].length);out+=this.renderer.codespan(escape(cap[2],true));continue}if(cap=this.rules.br.exec(src)){src=src.substring(cap[0].length);out+=this.renderer.br();continue}if(cap=this.rules.del.exec(src)){src=src.substring(cap[0].length);out+=this.renderer.del(this.output(cap[1]));continue}if(cap=this.rules.text.exec(src)){src=src.substring(cap[0].length);out+=this.renderer.text(escape(this.smartypants(cap[0])));continue}if(src){throw new Error("Infinite loop on byte: "+src.charCodeAt(0))}}return out};InlineLexer.prototype.outputLink=function(cap,link){var href=escape(link.href),title=link.title?escape(link.title):null;return cap[0].charAt(0)!=="!"?this.renderer.link(href,title,this.output(cap[1])):this.renderer.image(href,title,escape(cap[1]))};InlineLexer.prototype.smartypants=function(text){if(!this.options.smartypants)return text;return text.replace(/---/g,"—").replace(/--/g,"–").replace(/(^|[-\u2014\/(\[{"\s])'/g,"$1‘").replace(/'/g,"’").replace(/(^|[-\u2014\/(\[{\u2018\s])"/g,"$1“").replace(/"/g,"”").replace(/\.{3}/g,"…")};InlineLexer.prototype.mangle=function(text){if(!this.options.mangle)return text;var out="",l=text.length,i=0,ch;for(;i<l;i++){ch=text.charCodeAt(i);if(Math.random()>.5){ch="x"+ch.toString(16)}out+="&#"+ch+";"}return out};function Renderer(options){this.options=options||{}}Renderer.prototype.code=function(code,lang,escaped){if(this.options.highlight){var out=this.options.highlight(code,lang);if(out!=null&&out!==code){escaped=true;code=out}}if(!lang){return"<pre><code>"+(escaped?code:escape(code,true))+"\n</code></pre>"}return'<pre><code class="'+this.options.langPrefix+escape(lang,true)+'">'+(escaped?code:escape(code,true))+"\n</code></pre>\n"};Renderer.prototype.blockquote=function(quote){return"<blockquote>\n"+quote+"</blockquote>\n"};Renderer.prototype.html=function(html){return html};Renderer.prototype.heading=function(text,level,raw){return"<h"+level+' id="'+this.options.headerPrefix+raw.toLowerCase().replace(/[^\w]+/g,"-")+'">'+text+"</h"+level+">\n"};Renderer.prototype.hr=function(){return this.options.xhtml?"<hr/>\n":"<hr>\n"};Renderer.prototype.list=function(body,ordered){var type=ordered?"ol":"ul";return"<"+type+">\n"+body+"</"+type+">\n"};Renderer.prototype.listitem=function(text){return"<li>"+text+"</li>\n"};Renderer.prototype.paragraph=function(text){return"<p>"+text+"</p>\n"};Renderer.prototype.table=function(header,body){return"<table>\n"+"<thead>\n"+header+"</thead>\n"+"<tbody>\n"+body+"</tbody>\n"+"</table>\n"};Renderer.prototype.tablerow=function(content){return"<tr>\n"+content+"</tr>\n"};Renderer.prototype.tablecell=function(content,flags){var type=flags.header?"th":"td";var tag=flags.align?"<"+type+' style="text-align:'+flags.align+'">':"<"+type+">";return tag+content+"</"+type+">\n"};Renderer.prototype.strong=function(text){return"<strong>"+text+"</strong>"};Renderer.prototype.em=function(text){return"<em>"+text+"</em>"};Renderer.prototype.codespan=function(text){return"<code>"+text+"</code>"};Renderer.prototype.br=function(){return this.options.xhtml?"<br/>":"<br>"};Renderer.prototype.del=function(text){return"<del>"+text+"</del>"};Renderer.prototype.link=function(href,title,text){if(this.options.sanitize){try{var prot=decodeURIComponent(unescape(href)).replace(/[^\w:]/g,"").toLowerCase()}catch(e){return""}if(prot.indexOf("javascript:")===0||prot.indexOf("vbscript:")===0||prot.indexOf("data:")===0){return""}}var out='<a href="'+href+'"';if(title){out+=' title="'+title+'"'}out+=">"+text+"</a>";return out};Renderer.prototype.image=function(href,title,text){var out='<img src="'+href+'" alt="'+text+'"';if(title){out+=' title="'+title+'"'}out+=this.options.xhtml?"/>":">";return out};Renderer.prototype.text=function(text){return text};function Parser(options){this.tokens=[];this.token=null;this.options=options||marked.defaults;this.options.renderer=this.options.renderer||new Renderer;this.renderer=this.options.renderer;this.renderer.options=this.options}Parser.parse=function(src,options,renderer){var parser=new Parser(options,renderer);return parser.parse(src)};Parser.prototype.parse=function(src){this.inline=new InlineLexer(src.links,this.options,this.renderer);this.tokens=src.reverse();var out="";while(this.next()){out+=this.tok()}return out};Parser.prototype.next=function(){return this.token=this.tokens.pop()};Parser.prototype.peek=function(){return this.tokens[this.tokens.length-1]||0};Parser.prototype.parseText=function(){var body=this.token.text;while(this.peek().type==="text"){body+="\n"+this.next().text}return this.inline.output(body)};Parser.prototype.tok=function(){switch(this.token.type){case"space":{return""}case"hr":{return this.renderer.hr()}case"heading":{return this.renderer.heading(this.inline.output(this.token.text),this.token.depth,this.token.text)}case"code":{return this.renderer.code(this.token.text,this.token.lang,this.token.escaped)}case"table":{var header="",body="",i,row,cell,flags,j;cell="";for(i=0;i<this.token.header.length;i++){flags={header:true,align:this.token.align[i]};cell+=this.renderer.tablecell(this.inline.output(this.token.header[i]),{header:true,align:this.token.align[i]})}header+=this.renderer.tablerow(cell);for(i=0;i<this.token.cells.length;i++){row=this.token.cells[i];cell="";for(j=0;j<row.length;j++){cell+=this.renderer.tablecell(this.inline.output(row[j]),{header:false,align:this.token.align[j]})}body+=this.renderer.tablerow(cell)}return this.renderer.table(header,body)}case"blockquote_start":{var body="";while(this.next().type!=="blockquote_end"){body+=this.tok()}return this.renderer.blockquote(body)}case"list_start":{var body="",ordered=this.token.ordered;while(this.next().type!=="list_end"){body+=this.tok()}return this.renderer.list(body,ordered)}case"list_item_start":{var body="";while(this.next().type!=="list_item_end"){body+=this.token.type==="text"?this.parseText():this.tok()}return this.renderer.listitem(body)}case"loose_item_start":{var body="";while(this.next().type!=="list_item_end"){body+=this.tok()}return this.renderer.listitem(body)}case"html":{var html=!this.token.pre&&!this.options.pedantic?this.inline.output(this.token.text):this.token.text;return this.renderer.html(html)}case"paragraph":{return this.renderer.paragraph(this.inline.output(this.token.text))}case"text":{return this.renderer.paragraph(this.parseText())}}};function escape(html,encode){return html.replace(!encode?/&(?!#?\w+;)/g:/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;")}function unescape(html){return html.replace(/&(#(?:\d+)|(?:#x[0-9A-Fa-f]+)|(?:\w+));?/g,function(_,n){n=n.toLowerCase();if(n==="colon")return":";if(n.charAt(0)==="#"){return n.charAt(1)==="x"?String.fromCharCode(parseInt(n.substring(2),16)):String.fromCharCode(+n.substring(1))}return""})}function replace(regex,opt){regex=regex.source;opt=opt||"";return function self(name,val){if(!name)return new RegExp(regex,opt);val=val.source||val;val=val.replace(/(^|[^\[])\^/g,"$1");regex=regex.replace(name,val);return self}}function noop(){}noop.exec=noop;function merge(obj){var i=1,target,key;for(;i<arguments.length;i++){target=arguments[i];for(key in target){if(Object.prototype.hasOwnProperty.call(target,key)){obj[key]=target[key]}}}return obj}function marked(src,opt,callback){if(callback||typeof opt==="function"){if(!callback){callback=opt;opt=null}opt=merge({},marked.defaults,opt||{});var highlight=opt.highlight,tokens,pending,i=0;try{tokens=Lexer.lex(src,opt)}catch(e){return callback(e)}pending=tokens.length;var done=function(err){if(err){opt.highlight=highlight;return callback(err)}var out;try{out=Parser.parse(tokens,opt)}catch(e){err=e}opt.highlight=highlight;return err?callback(err):callback(null,out)};if(!highlight||highlight.length<3){return done()}delete opt.highlight;if(!pending)return done();for(;i<tokens.length;i++){(function(token){if(token.type!=="code"){return--pending||done()}return highlight(token.text,token.lang,function(err,code){if(err)return done(err);if(code==null||code===token.text){return--pending||done()}token.text=code;token.escaped=true;--pending||done()})})(tokens[i])}return}try{if(opt)opt=merge({},marked.defaults,opt);return Parser.parse(Lexer.lex(src,opt),opt)}catch(e){e.message+="\nPlease report this to https://github.com/chjj/marked.";if((opt||marked.defaults).silent){return"<p>An error occured:</p><pre>"+escape(e.message+"",true)+"</pre>"}throw e}}marked.options=marked.setOptions=function(opt){merge(marked.defaults,opt);return marked};marked.defaults={gfm:true,tables:true,breaks:false,pedantic:false,sanitize:false,sanitizer:null,mangle:true,smartLists:false,silent:false,highlight:null,langPrefix:"lang-",smartypants:false,headerPrefix:"",renderer:new Renderer,xhtml:false};marked.Parser=Parser;marked.parser=Parser.parse;marked.Renderer=Renderer;marked.Lexer=Lexer;marked.lexer=Lexer.lex;marked.InlineLexer=InlineLexer;marked.inlineLexer=InlineLexer.output;marked.parse=marked;if(typeof module!=="undefined"&&typeof exports==="object"){module.exports=marked}else if(typeof define==="function"&&define.amd){define(function(){return marked})}else{this.marked=marked}}).call(function(){return this||(typeof window!=="undefined"?window:global)}());
+
+	return module.exports;
+}();
+
+
+// FORMAT OPTIONS FOR MARKED IMPLEMENTATION
+
+function _Markdown_formatOptions(options)
+{
+	function toHighlight(code, lang)
+	{
+		if (!lang && elm$core$Maybe$isJust(options.ae))
+		{
+			lang = options.ae.a;
+		}
+
+		if (typeof hljs !== 'undefined' && lang && hljs.listLanguages().indexOf(lang) >= 0)
+		{
+			return hljs.highlight(lang, code, true).value;
+		}
+
+		return code;
+	}
+
+	var gfm = options.ah.a;
+
+	return {
+		highlight: toHighlight,
+		gfm: gfm,
+		tables: gfm && gfm.a5,
+		breaks: gfm && gfm.aG,
+		sanitize: options.ay,
+		smartypants: options.aA
+	};
+}
+var author$project$Main$ChangedUrl = function (a) {
+	return {$: 3, a: a};
 };
+var author$project$Main$RequestedUrl = function (a) {
+	return {$: 2, a: a};
+};
+var author$project$Main$NotFound = F2(
+	function (a, b) {
+		return {$: 0, a: a, b: b};
+	});
+var author$project$Main$GotHomeMsg = function (a) {
+	return {$: 5, a: a};
+};
+var author$project$Main$GotStoryMsg = function (a) {
+	return {$: 6, a: a};
+};
+var author$project$Main$Home = F3(
+	function (a, b, c) {
+		return {$: 1, a: a, b: b, c: c};
+	});
+var author$project$Main$Ignored = {$: 0};
+var author$project$Main$Story = F3(
+	function (a, b, c) {
+		return {$: 2, a: a, b: b, c: c};
+	});
+var author$project$Main$getNavKey = function (model) {
+	switch (model.$) {
+		case 0:
+			var navKey = model.a;
+			return navKey;
+		case 1:
+			var navKey = model.a;
+			return navKey;
+		default:
+			var navKey = model.a;
+			return navKey;
+	}
+};
+var elm$core$Basics$False = 1;
+var elm$core$Basics$True = 0;
+var elm$core$Result$isOk = function (result) {
+	if (!result.$) {
+		return true;
+	} else {
+		return false;
+	}
+};
+var elm$core$Basics$EQ = 1;
 var elm$core$Basics$GT = 2;
+var elm$core$Basics$LT = 0;
 var elm$core$Dict$foldr = F3(
 	function (func, acc, t) {
 		foldr:
@@ -4442,6 +4480,7 @@ var elm$core$Dict$foldr = F3(
 			}
 		}
 	});
+var elm$core$List$cons = _List_cons;
 var elm$core$Dict$toList = function (dict) {
 	return A3(
 		elm$core$Dict$foldr,
@@ -4469,558 +4508,29 @@ var elm$core$Set$toList = function (_n0) {
 	var dict = _n0;
 	return elm$core$Dict$keys(dict);
 };
-var elm$core$Basics$compare = _Utils_compare;
-var elm$core$Maybe$Just = function (a) {
-	return {$: 0, a: a};
-};
-var elm$core$Maybe$Nothing = {$: 1};
-var elm$core$Dict$get = F2(
-	function (targetKey, dict) {
-		get:
-		while (true) {
-			if (dict.$ === -2) {
-				return elm$core$Maybe$Nothing;
-			} else {
-				var key = dict.b;
-				var value = dict.c;
-				var left = dict.d;
-				var right = dict.e;
-				var _n1 = A2(elm$core$Basics$compare, targetKey, key);
-				switch (_n1) {
-					case 0:
-						var $temp$targetKey = targetKey,
-							$temp$dict = left;
-						targetKey = $temp$targetKey;
-						dict = $temp$dict;
-						continue get;
-					case 1:
-						return elm$core$Maybe$Just(value);
-					default:
-						var $temp$targetKey = targetKey,
-							$temp$dict = right;
-						targetKey = $temp$targetKey;
-						dict = $temp$dict;
-						continue get;
-				}
-			}
-		}
-	});
-var author$project$Components$getNarrative = function (_n0) {
-	var id = _n0.a;
-	var components = _n0.b;
-	var _n1 = A2(elm$core$Dict$get, 'narrative', components);
-	if ((!_n1.$) && (_n1.a.$ === 4)) {
-		var narrative = _n1.a.a;
-		return narrative;
-	} else {
-		return id;
-	}
-};
-var jschomay$elm_narrative_engine$Types$With = function (a) {
-	return {$: 4, a: a};
-};
-var jschomay$elm_narrative_engine$Engine$with = function (id) {
-	return jschomay$elm_narrative_engine$Types$With(id);
-};
-var author$project$Components$getRuleData = function (_n0) {
-	var id = _n0.a;
-	var components = _n0.b;
-	var _n1 = A2(elm$core$Dict$get, 'ruleData', components);
-	if ((!_n1.$) && (_n1.a.$ === 5)) {
-		var rule = _n1.a.a;
-		return rule;
-	} else {
-		return {
-			az: _List_Nil,
-			aC: _List_Nil,
-			aN: jschomay$elm_narrative_engine$Engine$with('')
-		};
-	}
-};
-var author$project$Components$Image = function (a) {
-	return {$: 1, a: a};
-};
-var elm$core$Dict$Black = 1;
-var elm$core$Dict$RBNode_elm_builtin = F5(
-	function (a, b, c, d, e) {
-		return {$: -1, a: a, b: b, c: c, d: d, e: e};
-	});
-var elm$core$Dict$RBEmpty_elm_builtin = {$: -2};
-var elm$core$Dict$Red = 0;
-var elm$core$Dict$balance = F5(
-	function (color, key, value, left, right) {
-		if ((right.$ === -1) && (!right.a)) {
-			var _n1 = right.a;
-			var rK = right.b;
-			var rV = right.c;
-			var rLeft = right.d;
-			var rRight = right.e;
-			if ((left.$ === -1) && (!left.a)) {
-				var _n3 = left.a;
-				var lK = left.b;
-				var lV = left.c;
-				var lLeft = left.d;
-				var lRight = left.e;
-				return A5(
-					elm$core$Dict$RBNode_elm_builtin,
-					0,
-					key,
-					value,
-					A5(elm$core$Dict$RBNode_elm_builtin, 1, lK, lV, lLeft, lRight),
-					A5(elm$core$Dict$RBNode_elm_builtin, 1, rK, rV, rLeft, rRight));
-			} else {
-				return A5(
-					elm$core$Dict$RBNode_elm_builtin,
-					color,
-					rK,
-					rV,
-					A5(elm$core$Dict$RBNode_elm_builtin, 0, key, value, left, rLeft),
-					rRight);
-			}
-		} else {
-			if ((((left.$ === -1) && (!left.a)) && (left.d.$ === -1)) && (!left.d.a)) {
-				var _n5 = left.a;
-				var lK = left.b;
-				var lV = left.c;
-				var _n6 = left.d;
-				var _n7 = _n6.a;
-				var llK = _n6.b;
-				var llV = _n6.c;
-				var llLeft = _n6.d;
-				var llRight = _n6.e;
-				var lRight = left.e;
-				return A5(
-					elm$core$Dict$RBNode_elm_builtin,
-					0,
-					lK,
-					lV,
-					A5(elm$core$Dict$RBNode_elm_builtin, 1, llK, llV, llLeft, llRight),
-					A5(elm$core$Dict$RBNode_elm_builtin, 1, key, value, lRight, right));
-			} else {
-				return A5(elm$core$Dict$RBNode_elm_builtin, color, key, value, left, right);
-			}
-		}
-	});
-var elm$core$Dict$insertHelp = F3(
-	function (key, value, dict) {
-		if (dict.$ === -2) {
-			return A5(elm$core$Dict$RBNode_elm_builtin, 0, key, value, elm$core$Dict$RBEmpty_elm_builtin, elm$core$Dict$RBEmpty_elm_builtin);
-		} else {
-			var nColor = dict.a;
-			var nKey = dict.b;
-			var nValue = dict.c;
-			var nLeft = dict.d;
-			var nRight = dict.e;
-			var _n1 = A2(elm$core$Basics$compare, key, nKey);
-			switch (_n1) {
-				case 0:
-					return A5(
-						elm$core$Dict$balance,
-						nColor,
-						nKey,
-						nValue,
-						A3(elm$core$Dict$insertHelp, key, value, nLeft),
-						nRight);
-				case 1:
-					return A5(elm$core$Dict$RBNode_elm_builtin, nColor, nKey, value, nLeft, nRight);
-				default:
-					return A5(
-						elm$core$Dict$balance,
-						nColor,
-						nKey,
-						nValue,
-						nLeft,
-						A3(elm$core$Dict$insertHelp, key, value, nRight));
-			}
-		}
-	});
-var elm$core$Dict$insert = F3(
-	function (key, value, dict) {
-		var _n0 = A3(elm$core$Dict$insertHelp, key, value, dict);
-		if ((_n0.$ === -1) && (!_n0.a)) {
-			var _n1 = _n0.a;
-			var k = _n0.b;
-			var v = _n0.c;
-			var l = _n0.d;
-			var r = _n0.e;
-			return A5(elm$core$Dict$RBNode_elm_builtin, 1, k, v, l, r);
-		} else {
-			var x = _n0;
-			return x;
-		}
-	});
-var author$project$Components$addComponent = F3(
-	function (componentId, component, _n0) {
-		var id = _n0.a;
-		var components = _n0.b;
-		return _Utils_Tuple2(
-			id,
-			A3(elm$core$Dict$insert, componentId, component, components));
-	});
-var elm$core$Basics$apL = F2(
-	function (f, x) {
-		return f(x);
-	});
-var author$project$Components$addImage = function (url) {
-	return A2(
-		author$project$Components$addComponent,
-		'image',
-		author$project$Components$Image(url));
-};
-var author$project$Components$Name = function (a) {
-	return {$: 0, a: a};
-};
-var author$project$Components$addName = function (name) {
-	return A2(
-		author$project$Components$addComponent,
-		'name',
-		author$project$Components$Name(name));
-};
-var elm$core$Dict$empty = elm$core$Dict$RBEmpty_elm_builtin;
-var author$project$Components$entity = function (id) {
-	return _Utils_Tuple2(id, elm$core$Dict$empty);
-};
-var elm$core$Basics$apR = F2(
-	function (x, f) {
-		return f(x);
-	});
-var author$project$Manifest$characters = _List_fromArray(
-	[
-		A2(
-		author$project$Components$addImage,
-		'/img/giraffe.png',
-		A2(
-			author$project$Components$addName,
-			'Jarald the Giraffe',
-			author$project$Components$entity('jarald'))),
-		A2(
-		author$project$Components$addImage,
-		'/img/panda.png',
-		A2(
-			author$project$Components$addName,
-			'Tenzin the Panda',
-			author$project$Components$entity('tenzin')))
-	]);
-var author$project$Manifest$items = _List_fromArray(
-	[
-		author$project$Components$entity('next')
-	]);
-var author$project$Manifest$locations = _List_fromArray(
-	[
-		A2(
-		author$project$Components$addImage,
-		'/img/forest.png',
-		A2(
-			author$project$Components$addName,
-			'The Forest',
-			author$project$Components$entity('forest'))),
-		A2(
-		author$project$Components$addImage,
-		'/img/castle.png',
-		A2(
-			author$project$Components$addName,
-			'The Castle',
-			author$project$Components$entity('castle')))
-	]);
-var author$project$Narrative$startingNarrative = {aL: 'opening', aM: '', aT: 'Once upon a time there was a peaceful forest...'};
-var author$project$Narrative$storyTitle = 'How Jarald and Tenzin Met';
-var author$project$Narrative$entersClearing = ' "Wow" they both said.\n\n"Should we go inside?" ask Tenzin with much excitement.\n\n"Last one there cooks dinner" Jarald yelled as he took a head start.\n';
-var author$project$Narrative$jaraldHearsASounds = 'A giraffe named Jarald was walking through that forest on his way to a mightly castle.\n\nJust when everything seems calm Jarald heard a noise. "What was that" cried Jarald.';
-var author$project$Narrative$tenzinIntro = ' "It\'s only me!" said tenzin. \n\n"Why are you always so scared?"\n';
-var author$project$Narrative$theEnd = 'To Be Continued...';
-var author$project$Narrative$throughTheClearing = ' "Don\'t scare me like that Tenzin" said jarald. \n\nHe look we are almost there.\n';
-var author$project$Components$Narrative = function (a) {
-	return {$: 4, a: a};
-};
-var author$project$Components$addNarrative = function (narrative) {
-	return A2(
-		author$project$Components$addComponent,
-		'narrative',
-		author$project$Components$Narrative(narrative));
-};
-var author$project$Components$RuleData = function (a) {
-	return {$: 5, a: a};
-};
-var author$project$Components$addRuleData = function (ruleData) {
-	return A2(
-		author$project$Components$addComponent,
-		'ruleData',
-		author$project$Components$RuleData(ruleData));
-};
-var author$project$Rules$rule = F3(
-	function (id, ruleData, narrative) {
-		return A2(
-			author$project$Components$addNarrative,
-			narrative,
-			A2(
-				author$project$Components$addRuleData,
-				ruleData,
-				author$project$Components$entity(id)));
-	});
-var elm$core$List$foldl = F3(
-	function (func, acc, list) {
-		foldl:
-		while (true) {
-			if (!list.b) {
-				return acc;
-			} else {
-				var x = list.a;
-				var xs = list.b;
-				var $temp$func = func,
-					$temp$acc = A2(func, x, acc),
-					$temp$list = xs;
-				func = $temp$func;
-				acc = $temp$acc;
-				list = $temp$list;
-				continue foldl;
-			}
-		}
-	});
-var elm$core$Dict$fromList = function (assocs) {
-	return A3(
-		elm$core$List$foldl,
-		F2(
-			function (_n0, dict) {
-				var key = _n0.a;
-				var value = _n0.b;
-				return A3(elm$core$Dict$insert, key, value, dict);
-			}),
-		elm$core$Dict$empty,
-		assocs);
-};
-var jschomay$elm_narrative_engine$Types$CharacterIsInLocation = F2(
-	function (a, b) {
-		return {$: 1, a: a, b: b};
-	});
-var jschomay$elm_narrative_engine$Engine$characterIsInLocation = jschomay$elm_narrative_engine$Types$CharacterIsInLocation;
-var jschomay$elm_narrative_engine$Types$CharacterIsNotInLocation = F2(
-	function (a, b) {
-		return {$: 2, a: a, b: b};
-	});
-var jschomay$elm_narrative_engine$Engine$characterIsNotInLocation = jschomay$elm_narrative_engine$Types$CharacterIsNotInLocation;
-var jschomay$elm_narrative_engine$Types$CurrentLocationIs = function (a) {
-	return {$: 3, a: a};
-};
-var jschomay$elm_narrative_engine$Engine$currentLocationIs = jschomay$elm_narrative_engine$Types$CurrentLocationIs;
-var jschomay$elm_narrative_engine$Types$MoveCharacterOffScreen = function (a) {
-	return {$: 8, a: a};
-};
-var jschomay$elm_narrative_engine$Engine$moveCharacterOffScreen = jschomay$elm_narrative_engine$Types$MoveCharacterOffScreen;
-var jschomay$elm_narrative_engine$Types$MoveCharacterToLocation = F2(
-	function (a, b) {
-		return {$: 7, a: a, b: b};
-	});
-var jschomay$elm_narrative_engine$Engine$moveCharacterToLocation = jschomay$elm_narrative_engine$Types$MoveCharacterToLocation;
-var jschomay$elm_narrative_engine$Types$MoveItemOffScreen = function (a) {
-	return {$: 6, a: a};
-};
-var jschomay$elm_narrative_engine$Engine$moveItemOffScreen = jschomay$elm_narrative_engine$Types$MoveItemOffScreen;
-var jschomay$elm_narrative_engine$Types$MoveTo = function (a) {
-	return {$: 0, a: a};
-};
-var jschomay$elm_narrative_engine$Engine$moveTo = jschomay$elm_narrative_engine$Types$MoveTo;
-var author$project$Rules$rules = elm$core$Dict$fromList(
-	_List_fromArray(
-		[
-			A3(
-			author$project$Rules$rule,
-			'entering the forest',
-			{
-				az: _List_fromArray(
-					[
-						A2(jschomay$elm_narrative_engine$Engine$moveCharacterToLocation, 'jarald', 'forest')
-					]),
-				aC: _List_fromArray(
-					[
-						jschomay$elm_narrative_engine$Engine$currentLocationIs('forest'),
-						A2(jschomay$elm_narrative_engine$Engine$characterIsNotInLocation, 'jarald', 'forest')
-					]),
-				aN: jschomay$elm_narrative_engine$Engine$with('next')
-			},
-			author$project$Narrative$jaraldHearsASounds),
-			A3(
-			author$project$Rules$rule,
-			'Introduction to tenzin',
-			{
-				az: _List_fromArray(
-					[
-						A2(jschomay$elm_narrative_engine$Engine$moveCharacterToLocation, 'tenzin', 'forest'),
-						jschomay$elm_narrative_engine$Engine$moveCharacterOffScreen('jarald')
-					]),
-				aC: _List_fromArray(
-					[
-						jschomay$elm_narrative_engine$Engine$currentLocationIs('forest'),
-						A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'jarald', 'forest'),
-						A2(jschomay$elm_narrative_engine$Engine$characterIsNotInLocation, 'tenzin', 'forest')
-					]),
-				aN: jschomay$elm_narrative_engine$Engine$with('next')
-			},
-			author$project$Narrative$tenzinIntro),
-			A3(
-			author$project$Rules$rule,
-			'through the clearing',
-			{
-				az: _List_fromArray(
-					[
-						A2(jschomay$elm_narrative_engine$Engine$moveCharacterToLocation, 'jarald', 'forest')
-					]),
-				aC: _List_fromArray(
-					[
-						jschomay$elm_narrative_engine$Engine$currentLocationIs('forest'),
-						A2(jschomay$elm_narrative_engine$Engine$characterIsNotInLocation, 'jarald', 'forest'),
-						A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'tenzin', 'forest')
-					]),
-				aN: jschomay$elm_narrative_engine$Engine$with('next')
-			},
-			author$project$Narrative$throughTheClearing),
-			A3(
-			author$project$Rules$rule,
-			'enters clearing',
-			{
-				az: _List_fromArray(
-					[
-						A2(jschomay$elm_narrative_engine$Engine$moveCharacterToLocation, 'jarald', 'castle'),
-						A2(jschomay$elm_narrative_engine$Engine$moveCharacterToLocation, 'tenzin', 'castle'),
-						jschomay$elm_narrative_engine$Engine$moveTo('castle')
-					]),
-				aC: _List_fromArray(
-					[
-						jschomay$elm_narrative_engine$Engine$currentLocationIs('forest'),
-						A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'jarald', 'forest'),
-						A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'tenzin', 'forest')
-					]),
-				aN: jschomay$elm_narrative_engine$Engine$with('next')
-			},
-			author$project$Narrative$entersClearing),
-			A3(
-			author$project$Rules$rule,
-			'Ending',
-			{
-				az: _List_fromArray(
-					[
-						jschomay$elm_narrative_engine$Engine$moveItemOffScreen('next')
-					]),
-				aC: _List_fromArray(
-					[
-						jschomay$elm_narrative_engine$Engine$currentLocationIs('castle'),
-						A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'jarald', 'castle'),
-						A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'tenzin', 'castle')
-					]),
-				aN: jschomay$elm_narrative_engine$Engine$with('next')
-			},
-			author$project$Narrative$theEnd)
-		]));
-var jschomay$elm_narrative_engine$Types$MoveItemToLocation = F2(
-	function (a, b) {
-		return {$: 4, a: a, b: b};
-	});
-var jschomay$elm_narrative_engine$Engine$moveItemToLocation = jschomay$elm_narrative_engine$Types$MoveItemToLocation;
-var author$project$Rules$startingState = _List_fromArray(
-	[
-		jschomay$elm_narrative_engine$Engine$moveTo('forest'),
-		A2(jschomay$elm_narrative_engine$Engine$moveItemToLocation, 'next', 'forest')
-	]);
-var elm$core$Basics$False = 1;
-var elm$core$Dict$map = F2(
-	function (func, dict) {
-		if (dict.$ === -2) {
-			return elm$core$Dict$RBEmpty_elm_builtin;
-		} else {
-			var color = dict.a;
-			var key = dict.b;
-			var value = dict.c;
-			var left = dict.d;
-			var right = dict.e;
-			return A5(
-				elm$core$Dict$RBNode_elm_builtin,
-				color,
-				key,
-				A2(func, key, value),
-				A2(elm$core$Dict$map, func, left),
-				A2(elm$core$Dict$map, func, right));
-		}
-	});
-var elm$core$Basics$add = _Basics_add;
-var elm$core$Basics$gt = _Utils_gt;
-var elm$core$List$reverse = function (list) {
-	return A3(elm$core$List$foldl, elm$core$List$cons, _List_Nil, list);
-};
-var elm$core$List$foldrHelper = F4(
-	function (fn, acc, ctr, ls) {
-		if (!ls.b) {
-			return acc;
-		} else {
-			var a = ls.a;
-			var r1 = ls.b;
-			if (!r1.b) {
-				return A2(fn, a, acc);
-			} else {
-				var b = r1.a;
-				var r2 = r1.b;
-				if (!r2.b) {
-					return A2(
-						fn,
-						a,
-						A2(fn, b, acc));
+var elm$core$Elm$JsArray$foldr = _JsArray_foldr;
+var elm$core$Array$foldr = F3(
+	function (func, baseCase, _n0) {
+		var tree = _n0.c;
+		var tail = _n0.d;
+		var helper = F2(
+			function (node, acc) {
+				if (!node.$) {
+					var subTree = node.a;
+					return A3(elm$core$Elm$JsArray$foldr, helper, acc, subTree);
 				} else {
-					var c = r2.a;
-					var r3 = r2.b;
-					if (!r3.b) {
-						return A2(
-							fn,
-							a,
-							A2(
-								fn,
-								b,
-								A2(fn, c, acc)));
-					} else {
-						var d = r3.a;
-						var r4 = r3.b;
-						var res = (ctr > 500) ? A3(
-							elm$core$List$foldl,
-							fn,
-							acc,
-							elm$core$List$reverse(r4)) : A4(elm$core$List$foldrHelper, fn, acc, ctr + 1, r4);
-						return A2(
-							fn,
-							a,
-							A2(
-								fn,
-								b,
-								A2(
-									fn,
-									c,
-									A2(fn, d, res))));
-					}
+					var values = node.a;
+					return A3(elm$core$Elm$JsArray$foldr, func, acc, values);
 				}
-			}
-		}
-	});
-var elm$core$List$foldr = F3(
-	function (fn, acc, ls) {
-		return A4(elm$core$List$foldrHelper, fn, acc, 0, ls);
-	});
-var elm$core$List$map = F2(
-	function (f, xs) {
+			});
 		return A3(
-			elm$core$List$foldr,
-			F2(
-				function (x, acc) {
-					return A2(
-						elm$core$List$cons,
-						f(x),
-						acc);
-				}),
-			_List_Nil,
-			xs);
+			elm$core$Elm$JsArray$foldr,
+			helper,
+			A3(elm$core$Elm$JsArray$foldr, func, baseCase, tail),
+			tree);
 	});
-var elm$core$Basics$True = 0;
-var elm$core$Result$isOk = function (result) {
-	if (!result.$) {
-		return true;
-	} else {
-		return false;
-	}
+var elm$core$Array$toList = function (array) {
+	return A3(elm$core$Array$foldr, elm$core$List$cons, _List_Nil, array);
 };
 var elm$core$Array$branchFactor = 32;
 var elm$core$Array$Array_elm_builtin = F4(
@@ -5045,6 +4555,28 @@ var elm$core$Array$SubTree = function (a) {
 	return {$: 0, a: a};
 };
 var elm$core$Elm$JsArray$initializeFromList = _JsArray_initializeFromList;
+var elm$core$List$foldl = F3(
+	function (func, acc, list) {
+		foldl:
+		while (true) {
+			if (!list.b) {
+				return acc;
+			} else {
+				var x = list.a;
+				var xs = list.b;
+				var $temp$func = func,
+					$temp$acc = A2(func, x, acc),
+					$temp$list = xs;
+				func = $temp$func;
+				acc = $temp$acc;
+				list = $temp$list;
+				continue foldl;
+			}
+		}
+	});
+var elm$core$List$reverse = function (list) {
+	return A3(elm$core$List$foldl, elm$core$List$cons, _List_Nil, list);
+};
 var elm$core$Array$compressNodes = F2(
 	function (nodes, acc) {
 		compressNodes:
@@ -5067,6 +4599,10 @@ var elm$core$Array$compressNodes = F2(
 			}
 		}
 	});
+var elm$core$Basics$apR = F2(
+	function (x, f) {
+		return f(x);
+	});
 var elm$core$Basics$eq = _Utils_equal;
 var elm$core$Tuple$first = function (_n0) {
 	var x = _n0.a;
@@ -5088,7 +4624,13 @@ var elm$core$Array$treeFromBuilder = F2(
 			}
 		}
 	});
+var elm$core$Basics$add = _Basics_add;
+var elm$core$Basics$apL = F2(
+	function (f, x) {
+		return f(x);
+	});
 var elm$core$Basics$floor = _Basics_floor;
+var elm$core$Basics$gt = _Utils_gt;
 var elm$core$Basics$max = F2(
 	function (x, y) {
 		return (_Utils_cmp(x, y) > 0) ? x : y;
@@ -5161,6 +4703,10 @@ var elm$core$Array$initialize = F2(
 			return A5(elm$core$Array$initializeHelp, fn, initialFromIndex, len, _List_Nil, tail);
 		}
 	});
+var elm$core$Maybe$Just = function (a) {
+	return {$: 0, a: a};
+};
+var elm$core$Maybe$Nothing = {$: 1};
 var elm$core$Result$Err = function (a) {
 	return {$: 1, a: a};
 };
@@ -5372,11 +4918,691 @@ var elm$json$Json$Decode$errorToStringHelp = F2(
 			}
 		}
 	});
-var elm$core$Platform$Cmd$batch = _Platform_batch;
-var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
+var elm$core$Platform$Cmd$map = _Platform_map;
+var author$project$Main$updateWith = F4(
+	function (toModel, toMsg, model, _n0) {
+		var subModel = _n0.a;
+		var subCmd = _n0.b;
+		return _Utils_Tuple2(
+			toModel(subModel),
+			A2(elm$core$Platform$Cmd$map, toMsg, subCmd));
+	});
+var author$project$Port$PreloadImages = elm$core$Basics$identity;
+var elm$json$Json$Encode$list = F2(
+	function (func, entries) {
+		return _Json_wrap(
+			A3(
+				elm$core$List$foldl,
+				_Json_addEntry(func),
+				_Json_emptyArray(0),
+				entries));
+	});
+var elm$json$Json$Encode$object = function (pairs) {
+	return _Json_wrap(
+		A3(
+			elm$core$List$foldl,
+			F2(
+				function (_n0, obj) {
+					var k = _n0.a;
+					var v = _n0.b;
+					return A3(_Json_addField, k, v, obj);
+				}),
+			_Json_emptyObject(0),
+			pairs));
+};
+var elm$json$Json$Encode$string = _Json_wrap;
+var author$project$Port$encode = function (msg) {
+	var images = msg;
+	return elm$json$Json$Encode$object(
+		_List_fromArray(
+			[
+				_Utils_Tuple2(
+				'command',
+				elm$json$Json$Encode$string('PRELOAD_IMAGES')),
+				_Utils_Tuple2(
+				'data',
+				A2(elm$json$Json$Encode$list, elm$json$Json$Encode$string, images))
+			]));
+};
 var elm$core$Basics$identity = function (x) {
 	return x;
 };
+var author$project$Port$toJavaScript = _Platform_outgoingPort('toJavaScript', elm$core$Basics$identity);
+var author$project$Story$Components$Image = function (a) {
+	return {$: 1, a: a};
+};
+var elm$core$Dict$Black = 1;
+var elm$core$Dict$RBNode_elm_builtin = F5(
+	function (a, b, c, d, e) {
+		return {$: -1, a: a, b: b, c: c, d: d, e: e};
+	});
+var elm$core$Basics$compare = _Utils_compare;
+var elm$core$Dict$RBEmpty_elm_builtin = {$: -2};
+var elm$core$Dict$Red = 0;
+var elm$core$Dict$balance = F5(
+	function (color, key, value, left, right) {
+		if ((right.$ === -1) && (!right.a)) {
+			var _n1 = right.a;
+			var rK = right.b;
+			var rV = right.c;
+			var rLeft = right.d;
+			var rRight = right.e;
+			if ((left.$ === -1) && (!left.a)) {
+				var _n3 = left.a;
+				var lK = left.b;
+				var lV = left.c;
+				var lLeft = left.d;
+				var lRight = left.e;
+				return A5(
+					elm$core$Dict$RBNode_elm_builtin,
+					0,
+					key,
+					value,
+					A5(elm$core$Dict$RBNode_elm_builtin, 1, lK, lV, lLeft, lRight),
+					A5(elm$core$Dict$RBNode_elm_builtin, 1, rK, rV, rLeft, rRight));
+			} else {
+				return A5(
+					elm$core$Dict$RBNode_elm_builtin,
+					color,
+					rK,
+					rV,
+					A5(elm$core$Dict$RBNode_elm_builtin, 0, key, value, left, rLeft),
+					rRight);
+			}
+		} else {
+			if ((((left.$ === -1) && (!left.a)) && (left.d.$ === -1)) && (!left.d.a)) {
+				var _n5 = left.a;
+				var lK = left.b;
+				var lV = left.c;
+				var _n6 = left.d;
+				var _n7 = _n6.a;
+				var llK = _n6.b;
+				var llV = _n6.c;
+				var llLeft = _n6.d;
+				var llRight = _n6.e;
+				var lRight = left.e;
+				return A5(
+					elm$core$Dict$RBNode_elm_builtin,
+					0,
+					lK,
+					lV,
+					A5(elm$core$Dict$RBNode_elm_builtin, 1, llK, llV, llLeft, llRight),
+					A5(elm$core$Dict$RBNode_elm_builtin, 1, key, value, lRight, right));
+			} else {
+				return A5(elm$core$Dict$RBNode_elm_builtin, color, key, value, left, right);
+			}
+		}
+	});
+var elm$core$Dict$insertHelp = F3(
+	function (key, value, dict) {
+		if (dict.$ === -2) {
+			return A5(elm$core$Dict$RBNode_elm_builtin, 0, key, value, elm$core$Dict$RBEmpty_elm_builtin, elm$core$Dict$RBEmpty_elm_builtin);
+		} else {
+			var nColor = dict.a;
+			var nKey = dict.b;
+			var nValue = dict.c;
+			var nLeft = dict.d;
+			var nRight = dict.e;
+			var _n1 = A2(elm$core$Basics$compare, key, nKey);
+			switch (_n1) {
+				case 0:
+					return A5(
+						elm$core$Dict$balance,
+						nColor,
+						nKey,
+						nValue,
+						A3(elm$core$Dict$insertHelp, key, value, nLeft),
+						nRight);
+				case 1:
+					return A5(elm$core$Dict$RBNode_elm_builtin, nColor, nKey, value, nLeft, nRight);
+				default:
+					return A5(
+						elm$core$Dict$balance,
+						nColor,
+						nKey,
+						nValue,
+						nLeft,
+						A3(elm$core$Dict$insertHelp, key, value, nRight));
+			}
+		}
+	});
+var elm$core$Dict$insert = F3(
+	function (key, value, dict) {
+		var _n0 = A3(elm$core$Dict$insertHelp, key, value, dict);
+		if ((_n0.$ === -1) && (!_n0.a)) {
+			var _n1 = _n0.a;
+			var k = _n0.b;
+			var v = _n0.c;
+			var l = _n0.d;
+			var r = _n0.e;
+			return A5(elm$core$Dict$RBNode_elm_builtin, 1, k, v, l, r);
+		} else {
+			var x = _n0;
+			return x;
+		}
+	});
+var author$project$Story$Components$addComponent = F3(
+	function (componentId, component, _n0) {
+		var id = _n0.a;
+		var components = _n0.b;
+		return _Utils_Tuple2(
+			id,
+			A3(elm$core$Dict$insert, componentId, component, components));
+	});
+var author$project$Story$Components$addImage = function (url) {
+	return A2(
+		author$project$Story$Components$addComponent,
+		'image',
+		author$project$Story$Components$Image(url));
+};
+var author$project$Story$Components$Name = function (a) {
+	return {$: 0, a: a};
+};
+var author$project$Story$Components$addName = function (name) {
+	return A2(
+		author$project$Story$Components$addComponent,
+		'name',
+		author$project$Story$Components$Name(name));
+};
+var elm$core$Dict$empty = elm$core$Dict$RBEmpty_elm_builtin;
+var author$project$Story$Components$entity = function (id) {
+	return _Utils_Tuple2(id, elm$core$Dict$empty);
+};
+var author$project$Story$HowJaraldandTenzinMet$Manifest$characters = _List_fromArray(
+	[
+		A2(
+		author$project$Story$Components$addImage,
+		'/img/giraffe.png',
+		A2(
+			author$project$Story$Components$addName,
+			'Jarald the Giraffe',
+			author$project$Story$Components$entity('jarald'))),
+		A2(
+		author$project$Story$Components$addImage,
+		'/img/panda.png',
+		A2(
+			author$project$Story$Components$addName,
+			'Tenzin the Panda',
+			author$project$Story$Components$entity('tenzin')))
+	]);
+var author$project$Story$HowJaraldandTenzinMet$Manifest$items = _List_fromArray(
+	[
+		author$project$Story$Components$entity('next')
+	]);
+var author$project$Story$HowJaraldandTenzinMet$Manifest$locations = _List_fromArray(
+	[
+		A2(
+		author$project$Story$Components$addImage,
+		'/img/forest.png',
+		A2(
+			author$project$Story$Components$addName,
+			'The Forest',
+			author$project$Story$Components$entity('forest'))),
+		A2(
+		author$project$Story$Components$addImage,
+		'/img/castle.png',
+		A2(
+			author$project$Story$Components$addName,
+			'The Castle',
+			author$project$Story$Components$entity('castle')))
+	]);
+var author$project$Story$HowJaraldandTenzinMet$Narrative$startingNarrative = {aS: 'opening', aT: '', Q: 'Once upon a time there was a peaceful forest...'};
+var author$project$Story$Components$Narrative = function (a) {
+	return {$: 4, a: a};
+};
+var author$project$Story$Components$addNarrative = function (narrative) {
+	return A2(
+		author$project$Story$Components$addComponent,
+		'narrative',
+		author$project$Story$Components$Narrative(narrative));
+};
+var author$project$Story$Components$RuleData = function (a) {
+	return {$: 5, a: a};
+};
+var author$project$Story$Components$addRuleData = function (ruleData) {
+	return A2(
+		author$project$Story$Components$addComponent,
+		'ruleData',
+		author$project$Story$Components$RuleData(ruleData));
+};
+var author$project$Story$Components$createRule = F3(
+	function (id, ruleData, narrative) {
+		return A2(
+			author$project$Story$Components$addNarrative,
+			narrative,
+			A2(
+				author$project$Story$Components$addRuleData,
+				ruleData,
+				author$project$Story$Components$entity(id)));
+	});
+var author$project$Story$HowJaraldandTenzinMet$Narrative$entersClearing = ' "Wow" they both said.\n\n"Should we go inside?" ask Tenzin with much excitement.\n\n"Last one there cooks dinner" Jarald yelled as he took a head start.\n';
+var author$project$Story$HowJaraldandTenzinMet$Narrative$jaraldHearsASounds = 'A giraffe named Jarald was walking through that forest on his way to a mightly castle.\n\nJust when everything seems calm Jarald heard a noise. "What was that" cried Jarald.';
+var author$project$Story$HowJaraldandTenzinMet$Narrative$tenzinIntro = ' "It\'s only me!" said tenzin. \n\n"Why are you always so scared?"\n';
+var author$project$Story$HowJaraldandTenzinMet$Narrative$theEnd = 'To Be Continued...';
+var author$project$Story$HowJaraldandTenzinMet$Narrative$throughTheClearing = ' "Don\'t scare me like that Tenzin" said jarald. \n\nHe look we are almost there.\n';
+var elm$core$Dict$fromList = function (assocs) {
+	return A3(
+		elm$core$List$foldl,
+		F2(
+			function (_n0, dict) {
+				var key = _n0.a;
+				var value = _n0.b;
+				return A3(elm$core$Dict$insert, key, value, dict);
+			}),
+		elm$core$Dict$empty,
+		assocs);
+};
+var jschomay$elm_narrative_engine$Types$CharacterIsInLocation = F2(
+	function (a, b) {
+		return {$: 1, a: a, b: b};
+	});
+var jschomay$elm_narrative_engine$Engine$characterIsInLocation = jschomay$elm_narrative_engine$Types$CharacterIsInLocation;
+var jschomay$elm_narrative_engine$Types$CharacterIsNotInLocation = F2(
+	function (a, b) {
+		return {$: 2, a: a, b: b};
+	});
+var jschomay$elm_narrative_engine$Engine$characterIsNotInLocation = jschomay$elm_narrative_engine$Types$CharacterIsNotInLocation;
+var jschomay$elm_narrative_engine$Types$CurrentLocationIs = function (a) {
+	return {$: 3, a: a};
+};
+var jschomay$elm_narrative_engine$Engine$currentLocationIs = jschomay$elm_narrative_engine$Types$CurrentLocationIs;
+var jschomay$elm_narrative_engine$Types$MoveCharacterOffScreen = function (a) {
+	return {$: 8, a: a};
+};
+var jschomay$elm_narrative_engine$Engine$moveCharacterOffScreen = jschomay$elm_narrative_engine$Types$MoveCharacterOffScreen;
+var jschomay$elm_narrative_engine$Types$MoveCharacterToLocation = F2(
+	function (a, b) {
+		return {$: 7, a: a, b: b};
+	});
+var jschomay$elm_narrative_engine$Engine$moveCharacterToLocation = jschomay$elm_narrative_engine$Types$MoveCharacterToLocation;
+var jschomay$elm_narrative_engine$Types$MoveItemOffScreen = function (a) {
+	return {$: 6, a: a};
+};
+var jschomay$elm_narrative_engine$Engine$moveItemOffScreen = jschomay$elm_narrative_engine$Types$MoveItemOffScreen;
+var jschomay$elm_narrative_engine$Types$MoveTo = function (a) {
+	return {$: 0, a: a};
+};
+var jschomay$elm_narrative_engine$Engine$moveTo = jschomay$elm_narrative_engine$Types$MoveTo;
+var jschomay$elm_narrative_engine$Types$With = function (a) {
+	return {$: 4, a: a};
+};
+var jschomay$elm_narrative_engine$Engine$with = function (id) {
+	return jschomay$elm_narrative_engine$Types$With(id);
+};
+var author$project$Story$HowJaraldandTenzinMet$Rules$rules = elm$core$Dict$fromList(
+	_List_fromArray(
+		[
+			A3(
+			author$project$Story$Components$createRule,
+			'entering the forest',
+			{
+				aH: _List_fromArray(
+					[
+						A2(jschomay$elm_narrative_engine$Engine$moveCharacterToLocation, 'jarald', 'forest')
+					]),
+				aI: _List_fromArray(
+					[
+						jschomay$elm_narrative_engine$Engine$currentLocationIs('forest'),
+						A2(jschomay$elm_narrative_engine$Engine$characterIsNotInLocation, 'jarald', 'forest')
+					]),
+				aU: jschomay$elm_narrative_engine$Engine$with('next')
+			},
+			author$project$Story$HowJaraldandTenzinMet$Narrative$jaraldHearsASounds),
+			A3(
+			author$project$Story$Components$createRule,
+			'Introduction to tenzin',
+			{
+				aH: _List_fromArray(
+					[
+						A2(jschomay$elm_narrative_engine$Engine$moveCharacterToLocation, 'tenzin', 'forest'),
+						jschomay$elm_narrative_engine$Engine$moveCharacterOffScreen('jarald')
+					]),
+				aI: _List_fromArray(
+					[
+						jschomay$elm_narrative_engine$Engine$currentLocationIs('forest'),
+						A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'jarald', 'forest'),
+						A2(jschomay$elm_narrative_engine$Engine$characterIsNotInLocation, 'tenzin', 'forest')
+					]),
+				aU: jschomay$elm_narrative_engine$Engine$with('next')
+			},
+			author$project$Story$HowJaraldandTenzinMet$Narrative$tenzinIntro),
+			A3(
+			author$project$Story$Components$createRule,
+			'through the clearing',
+			{
+				aH: _List_fromArray(
+					[
+						A2(jschomay$elm_narrative_engine$Engine$moveCharacterToLocation, 'jarald', 'forest')
+					]),
+				aI: _List_fromArray(
+					[
+						jschomay$elm_narrative_engine$Engine$currentLocationIs('forest'),
+						A2(jschomay$elm_narrative_engine$Engine$characterIsNotInLocation, 'jarald', 'forest'),
+						A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'tenzin', 'forest')
+					]),
+				aU: jschomay$elm_narrative_engine$Engine$with('next')
+			},
+			author$project$Story$HowJaraldandTenzinMet$Narrative$throughTheClearing),
+			A3(
+			author$project$Story$Components$createRule,
+			'enters clearing',
+			{
+				aH: _List_fromArray(
+					[
+						A2(jschomay$elm_narrative_engine$Engine$moveCharacterToLocation, 'jarald', 'castle'),
+						A2(jschomay$elm_narrative_engine$Engine$moveCharacterToLocation, 'tenzin', 'castle'),
+						jschomay$elm_narrative_engine$Engine$moveTo('castle')
+					]),
+				aI: _List_fromArray(
+					[
+						jschomay$elm_narrative_engine$Engine$currentLocationIs('forest'),
+						A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'jarald', 'forest'),
+						A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'tenzin', 'forest')
+					]),
+				aU: jschomay$elm_narrative_engine$Engine$with('next')
+			},
+			author$project$Story$HowJaraldandTenzinMet$Narrative$entersClearing),
+			A3(
+			author$project$Story$Components$createRule,
+			'TheEnd',
+			{
+				aH: _List_fromArray(
+					[
+						jschomay$elm_narrative_engine$Engine$moveItemOffScreen('next')
+					]),
+				aI: _List_fromArray(
+					[
+						jschomay$elm_narrative_engine$Engine$currentLocationIs('castle'),
+						A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'jarald', 'castle'),
+						A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'tenzin', 'castle')
+					]),
+				aU: jschomay$elm_narrative_engine$Engine$with('next')
+			},
+			author$project$Story$HowJaraldandTenzinMet$Narrative$theEnd)
+		]));
+var jschomay$elm_narrative_engine$Types$MoveItemToLocation = F2(
+	function (a, b) {
+		return {$: 4, a: a, b: b};
+	});
+var jschomay$elm_narrative_engine$Engine$moveItemToLocation = jschomay$elm_narrative_engine$Types$MoveItemToLocation;
+var author$project$Story$HowJaraldandTenzinMet$Rules$startingState = _List_fromArray(
+	[
+		jschomay$elm_narrative_engine$Engine$moveTo('forest'),
+		A2(jschomay$elm_narrative_engine$Engine$moveItemToLocation, 'next', 'forest')
+	]);
+var author$project$Story$HowJaraldandTenzinMet$StoryInfo$storyInfo = {
+	ac: 'https://via.placeholder.com/150x200?text=How Jarald and Tenzin Met',
+	aP: _List_fromArray(
+		['/img/giraffe.png', '/img/panda.png', '/img/forest.png', '/img/castle.png']),
+	aV: {ab: author$project$Story$HowJaraldandTenzinMet$Manifest$characters, aj: author$project$Story$HowJaraldandTenzinMet$Manifest$items, an: author$project$Story$HowJaraldandTenzinMet$Manifest$locations},
+	a0: author$project$Story$HowJaraldandTenzinMet$Rules$rules,
+	a1: 'how-jarald-and-tenzin-met',
+	a2: author$project$Story$HowJaraldandTenzinMet$Narrative$startingNarrative,
+	a3: author$project$Story$HowJaraldandTenzinMet$Rules$startingState,
+	Y: 'How Jarald and Tenzin Met'
+};
+var author$project$Story$TheAdventuresOfLaz$Manifest$characters = _List_fromArray(
+	[
+		A2(
+		author$project$Story$Components$addImage,
+		'/img/laz.png',
+		A2(
+			author$project$Story$Components$addName,
+			'Lax the Cat',
+			author$project$Story$Components$entity('laz')))
+	]);
+var author$project$Story$TheAdventuresOfLaz$Manifest$items = _List_fromArray(
+	[
+		author$project$Story$Components$entity('next')
+	]);
+var author$project$Story$TheAdventuresOfLaz$Manifest$locations = _List_fromArray(
+	[
+		A2(
+		author$project$Story$Components$addImage,
+		'/img/forest.png',
+		A2(
+			author$project$Story$Components$addName,
+			'The Forest',
+			author$project$Story$Components$entity('forest')))
+	]);
+var author$project$Story$TheAdventuresOfLaz$Narrative$startingNarrative = {aS: 'opening', aT: '', Q: 'There once was a cat.'};
+var author$project$Story$TheAdventuresOfLaz$Rules$rules = elm$core$Dict$fromList(
+	_List_fromArray(
+		[
+			A3(
+			author$project$Story$Components$createRule,
+			'entering the forest',
+			{
+				aH: _List_fromArray(
+					[
+						A2(jschomay$elm_narrative_engine$Engine$moveCharacterToLocation, 'laz', 'forest')
+					]),
+				aI: _List_fromArray(
+					[
+						jschomay$elm_narrative_engine$Engine$currentLocationIs('forest'),
+						A2(jschomay$elm_narrative_engine$Engine$characterIsNotInLocation, 'laz', 'forest')
+					]),
+				aU: jschomay$elm_narrative_engine$Engine$with('next')
+			},
+			author$project$Story$HowJaraldandTenzinMet$Narrative$jaraldHearsASounds),
+			A3(
+			author$project$Story$Components$createRule,
+			'TheEnd',
+			{
+				aH: _List_fromArray(
+					[
+						jschomay$elm_narrative_engine$Engine$moveItemOffScreen('next')
+					]),
+				aI: _List_fromArray(
+					[
+						jschomay$elm_narrative_engine$Engine$currentLocationIs('forest'),
+						A2(jschomay$elm_narrative_engine$Engine$characterIsInLocation, 'laz', 'forest')
+					]),
+				aU: jschomay$elm_narrative_engine$Engine$with('next')
+			},
+			author$project$Story$HowJaraldandTenzinMet$Narrative$theEnd)
+		]));
+var author$project$Story$TheAdventuresOfLaz$Rules$startingState = _List_fromArray(
+	[
+		jschomay$elm_narrative_engine$Engine$moveTo('forest'),
+		A2(jschomay$elm_narrative_engine$Engine$moveItemToLocation, 'next', 'forest')
+	]);
+var author$project$Story$TheAdventuresOfLaz$StoryInfo$storyInfo = {
+	ac: 'https://via.placeholder.com/150x200?text=The Adventures of Laz The Cat',
+	aP: _List_fromArray(
+		['/img/laz.png', '/img/forest.png']),
+	aV: {ab: author$project$Story$TheAdventuresOfLaz$Manifest$characters, aj: author$project$Story$TheAdventuresOfLaz$Manifest$items, an: author$project$Story$TheAdventuresOfLaz$Manifest$locations},
+	a0: author$project$Story$TheAdventuresOfLaz$Rules$rules,
+	a1: 'the-adventures-of-laz-the-cat',
+	a2: author$project$Story$TheAdventuresOfLaz$Narrative$startingNarrative,
+	a3: author$project$Story$TheAdventuresOfLaz$Rules$startingState,
+	Y: 'The Adventures Of Laz The Cat'
+};
+var author$project$Story$AllStories$allStories = _List_fromArray(
+	[author$project$Story$HowJaraldandTenzinMet$StoryInfo$storyInfo, author$project$Story$TheAdventuresOfLaz$StoryInfo$storyInfo]);
+var elm$core$List$foldrHelper = F4(
+	function (fn, acc, ctr, ls) {
+		if (!ls.b) {
+			return acc;
+		} else {
+			var a = ls.a;
+			var r1 = ls.b;
+			if (!r1.b) {
+				return A2(fn, a, acc);
+			} else {
+				var b = r1.a;
+				var r2 = r1.b;
+				if (!r2.b) {
+					return A2(
+						fn,
+						a,
+						A2(fn, b, acc));
+				} else {
+					var c = r2.a;
+					var r3 = r2.b;
+					if (!r3.b) {
+						return A2(
+							fn,
+							a,
+							A2(
+								fn,
+								b,
+								A2(fn, c, acc)));
+					} else {
+						var d = r3.a;
+						var r4 = r3.b;
+						var res = (ctr > 500) ? A3(
+							elm$core$List$foldl,
+							fn,
+							acc,
+							elm$core$List$reverse(r4)) : A4(elm$core$List$foldrHelper, fn, acc, ctr + 1, r4);
+						return A2(
+							fn,
+							a,
+							A2(
+								fn,
+								b,
+								A2(
+									fn,
+									c,
+									A2(fn, d, res))));
+					}
+				}
+			}
+		}
+	});
+var elm$core$List$foldr = F3(
+	function (fn, acc, ls) {
+		return A4(elm$core$List$foldrHelper, fn, acc, 0, ls);
+	});
+var elm$core$List$map = F2(
+	function (f, xs) {
+		return A3(
+			elm$core$List$foldr,
+			F2(
+				function (x, acc) {
+					return A2(
+						elm$core$List$cons,
+						f(x),
+						acc);
+				}),
+			_List_Nil,
+			xs);
+	});
+var author$project$Page$Home$init = function () {
+	var loadImagesMsg = A2(
+		elm$core$List$cons,
+		'/img/home-background.png',
+		A2(
+			elm$core$List$map,
+			function ($) {
+				return $.ac;
+			},
+			author$project$Story$AllStories$allStories));
+	return _Utils_Tuple2(
+		{W: author$project$Story$AllStories$allStories},
+		author$project$Port$toJavaScript(
+			author$project$Port$encode(loadImagesMsg)));
+}();
+var elm$core$Platform$Cmd$batch = _Platform_batch;
+var elm$core$Platform$Cmd$none = elm$core$Platform$Cmd$batch(_List_Nil);
+var author$project$Page$NotFound$init = _Utils_Tuple2(
+	{},
+	elm$core$Platform$Cmd$none);
+var author$project$Story$getImagesToPreload = function (story) {
+	var imagesToPreLoad = story.aP;
+	return imagesToPreLoad;
+};
+var author$project$Story$getManifest = function (story) {
+	var manifest = story.aV;
+	return manifest;
+};
+var author$project$Story$getRules = function (story) {
+	var rules = story.a0;
+	return rules;
+};
+var author$project$Story$getStartingNarrative = function (story) {
+	var startingNarrative = story.a2;
+	return startingNarrative;
+};
+var author$project$Story$getStartingState = function (story) {
+	var startingState = story.a3;
+	return startingState;
+};
+var elm$core$Dict$get = F2(
+	function (targetKey, dict) {
+		get:
+		while (true) {
+			if (dict.$ === -2) {
+				return elm$core$Maybe$Nothing;
+			} else {
+				var key = dict.b;
+				var value = dict.c;
+				var left = dict.d;
+				var right = dict.e;
+				var _n1 = A2(elm$core$Basics$compare, targetKey, key);
+				switch (_n1) {
+					case 0:
+						var $temp$targetKey = targetKey,
+							$temp$dict = left;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+					case 1:
+						return elm$core$Maybe$Just(value);
+					default:
+						var $temp$targetKey = targetKey,
+							$temp$dict = right;
+						targetKey = $temp$targetKey;
+						dict = $temp$dict;
+						continue get;
+				}
+			}
+		}
+	});
+var author$project$Story$Components$getNarrative = F2(
+	function (id, components) {
+		var _n0 = A2(elm$core$Dict$get, 'narrative', components);
+		if ((!_n0.$) && (_n0.a.$ === 4)) {
+			var narrative = _n0.a.a;
+			return narrative;
+		} else {
+			return id;
+		}
+	});
+var author$project$Story$Components$getRuleData = F2(
+	function (id, components) {
+		var _n0 = A2(elm$core$Dict$get, 'ruleData', components);
+		if ((!_n0.$) && (_n0.a.$ === 5)) {
+			var rule = _n0.a.a;
+			return rule;
+		} else {
+			return {
+				aH: _List_Nil,
+				aI: _List_Nil,
+				aU: jschomay$elm_narrative_engine$Engine$with('')
+			};
+		}
+	});
+var elm$core$Dict$map = F2(
+	function (func, dict) {
+		if (dict.$ === -2) {
+			return elm$core$Dict$RBEmpty_elm_builtin;
+		} else {
+			var color = dict.a;
+			var key = dict.b;
+			var value = dict.c;
+			var left = dict.d;
+			var right = dict.e;
+			return A5(
+				elm$core$Dict$RBNode_elm_builtin,
+				color,
+				key,
+				A2(func, key, value),
+				A2(elm$core$Dict$map, func, left),
+				A2(elm$core$Dict$map, func, right));
+		}
+	});
 var jschomay$elm_narrative_engine$Engine$Model = elm$core$Basics$identity;
 var elm$core$Dict$getMin = function (dict) {
 	getMin:
@@ -5907,24 +6133,24 @@ var jschomay$elm_narrative_engine$Engine$changeWorld = F2(
 						var location = change.a;
 						return _Utils_update(
 							story_,
-							{aD: location});
+							{J: location});
 					case 9:
 						var sceneName = change.a;
 						return _Utils_update(
 							story_,
-							{M: sceneName});
+							{O: sceneName});
 					case 10:
 						var ending = change.a;
 						return _Utils_update(
 							story_,
 							{
-								T: elm$core$Maybe$Just(ending)
+								X: elm$core$Maybe$Just(ending)
 							});
 					default:
 						return _Utils_update(
 							story_,
 							{
-								i: A2(jschomay$elm_narrative_engine$Engine$Manifest$update, change, story_.i)
+								aV: A2(jschomay$elm_narrative_engine$Engine$Manifest$update, change, story_.aV)
 							});
 				}
 			});
@@ -5934,9 +6160,9 @@ var jschomay$elm_narrative_engine$Engine$Manifest$character = jschomay$elm_narra
 var jschomay$elm_narrative_engine$Engine$Manifest$item = A2(jschomay$elm_narrative_engine$Types$Item, false, jschomay$elm_narrative_engine$Types$ItemOffScreen);
 var jschomay$elm_narrative_engine$Engine$Manifest$location = jschomay$elm_narrative_engine$Types$Location(false);
 var jschomay$elm_narrative_engine$Engine$Manifest$init = function (_n0) {
-	var items = _n0.aO;
-	var locations = _n0.aR;
-	var characters = _n0.aA;
+	var items = _n0.aj;
+	var locations = _n0.an;
+	var characters = _n0.ab;
 	var insertFn = F3(
 		function (interactableConstructor, id, acc) {
 			return A3(elm$core$Dict$insert, id, interactableConstructor, acc);
@@ -5962,75 +6188,613 @@ var jschomay$elm_narrative_engine$Engine$Manifest$init = function (_n0) {
 var jschomay$elm_narrative_engine$Engine$init = F2(
 	function (manifest, rules) {
 		return {
-			aD: '',
-			M: '',
+			J: '',
+			O: '',
 			e: _List_Nil,
-			i: jschomay$elm_narrative_engine$Engine$Manifest$init(manifest),
-			aY: rules,
-			T: elm$core$Maybe$Nothing
+			aV: jschomay$elm_narrative_engine$Engine$Manifest$init(manifest),
+			a0: rules,
+			X: elm$core$Maybe$Nothing
 		};
 	});
-var author$project$Main$init = function () {
+var author$project$Page$Story$init = function (story) {
+	var rules = author$project$Story$getRules(story);
+	var manifest = author$project$Story$getManifest(story);
+	var loadImagesMsg = author$project$Story$getImagesToPreload(story);
 	var engineModel = A2(
 		jschomay$elm_narrative_engine$Engine$changeWorld,
-		author$project$Rules$startingState,
+		author$project$Story$getStartingState(story),
 		A2(
 			jschomay$elm_narrative_engine$Engine$init,
 			{
-				aA: A2(elm$core$List$map, elm$core$Tuple$first, author$project$Manifest$characters),
-				aO: A2(elm$core$List$map, elm$core$Tuple$first, author$project$Manifest$items),
-				aR: A2(elm$core$List$map, elm$core$Tuple$first, author$project$Manifest$locations)
+				ab: A2(elm$core$List$map, elm$core$Tuple$first, manifest.ab),
+				aj: A2(elm$core$List$map, elm$core$Tuple$first, manifest.aj),
+				an: A2(elm$core$List$map, elm$core$Tuple$first, manifest.an)
 			},
-			A2(
-				elm$core$Dict$map,
-				F2(
-					function (k, v) {
-						return author$project$Components$getRuleData(
-							_Utils_Tuple2(k, v));
-					}),
-				author$project$Rules$rules)));
+			A2(elm$core$Dict$map, author$project$Story$Components$getRuleData, rules)));
 	return _Utils_Tuple2(
 		{
 			h: engineModel,
-			E: false,
-			O: A2(
-				elm$core$Dict$map,
-				F2(
-					function (k, v) {
-						return author$project$Components$getNarrative(
-							_Utils_Tuple2(k, v));
-					}),
-				author$project$Rules$rules),
-			s: _List_fromArray(
-				[author$project$Narrative$startingNarrative]),
-			at: author$project$Narrative$storyTitle
+			R: A2(elm$core$Dict$map, author$project$Story$Components$getNarrative, rules),
+			y: story,
+			j: _List_fromArray(
+				[
+					author$project$Story$getStartingNarrative(story)
+				])
 		},
-		elm$core$Platform$Cmd$none);
+		author$project$Port$toJavaScript(
+			author$project$Port$encode(loadImagesMsg)));
+};
+var elm$core$Basics$always = F2(
+	function (a, _n0) {
+		return a;
+	});
+var author$project$Main$changeRouteTo = F2(
+	function (maybeRoute, model) {
+		var navKey = author$project$Main$getNavKey(model);
+		if (maybeRoute.$ === 1) {
+			var _n1 = author$project$Page$NotFound$init;
+			var notFoundModel = _n1.a;
+			var cmds = _n1.b;
+			return _Utils_Tuple2(
+				A2(author$project$Main$NotFound, navKey, notFoundModel),
+				A2(
+					elm$core$Platform$Cmd$map,
+					elm$core$Basics$always(author$project$Main$Ignored),
+					cmds));
+		} else {
+			if (!maybeRoute.a.$) {
+				var _n2 = maybeRoute.a;
+				return A4(
+					author$project$Main$updateWith,
+					A2(author$project$Main$Home, navKey, false),
+					author$project$Main$GotHomeMsg,
+					model,
+					author$project$Page$Home$init);
+			} else {
+				var story = maybeRoute.a.a;
+				return A4(
+					author$project$Main$updateWith,
+					A2(author$project$Main$Story, navKey, false),
+					author$project$Main$GotStoryMsg,
+					model,
+					author$project$Page$Story$init(story));
+			}
+		}
+	});
+var author$project$Route$Home = {$: 0};
+var author$project$Route$Story = function (a) {
+	return {$: 1, a: a};
+};
+var author$project$Story$Story = elm$core$Basics$identity;
+var elm$url$Url$Parser$Parser = elm$core$Basics$identity;
+var elm$url$Url$Parser$State = F5(
+	function (visited, unvisited, params, frag, value) {
+		return {p: frag, r: params, o: unvisited, k: value, s: visited};
+	});
+var elm$url$Url$Parser$mapState = F2(
+	function (func, _n0) {
+		var visited = _n0.s;
+		var unvisited = _n0.o;
+		var params = _n0.r;
+		var frag = _n0.p;
+		var value = _n0.k;
+		return A5(
+			elm$url$Url$Parser$State,
+			visited,
+			unvisited,
+			params,
+			frag,
+			func(value));
+	});
+var elm$url$Url$Parser$map = F2(
+	function (subValue, _n0) {
+		var parseArg = _n0;
+		return function (_n1) {
+			var visited = _n1.s;
+			var unvisited = _n1.o;
+			var params = _n1.r;
+			var frag = _n1.p;
+			var value = _n1.k;
+			return A2(
+				elm$core$List$map,
+				elm$url$Url$Parser$mapState(value),
+				parseArg(
+					A5(elm$url$Url$Parser$State, visited, unvisited, params, frag, subValue)));
+		};
+	});
+var elm$core$List$append = F2(
+	function (xs, ys) {
+		if (!ys.b) {
+			return xs;
+		} else {
+			return A3(elm$core$List$foldr, elm$core$List$cons, ys, xs);
+		}
+	});
+var elm$core$List$concat = function (lists) {
+	return A3(elm$core$List$foldr, elm$core$List$append, _List_Nil, lists);
+};
+var elm$core$List$concatMap = F2(
+	function (f, list) {
+		return elm$core$List$concat(
+			A2(elm$core$List$map, f, list));
+	});
+var elm$url$Url$Parser$oneOf = function (parsers) {
+	return function (state) {
+		return A2(
+			elm$core$List$concatMap,
+			function (_n0) {
+				var parser = _n0;
+				return parser(state);
+			},
+			parsers);
+	};
+};
+var elm$url$Url$Parser$s = function (str) {
+	return function (_n0) {
+		var visited = _n0.s;
+		var unvisited = _n0.o;
+		var params = _n0.r;
+		var frag = _n0.p;
+		var value = _n0.k;
+		if (!unvisited.b) {
+			return _List_Nil;
+		} else {
+			var next = unvisited.a;
+			var rest = unvisited.b;
+			return _Utils_eq(next, str) ? _List_fromArray(
+				[
+					A5(
+					elm$url$Url$Parser$State,
+					A2(elm$core$List$cons, next, visited),
+					rest,
+					params,
+					frag,
+					value)
+				]) : _List_Nil;
+		}
+	};
+};
+var author$project$Story$parser = function () {
+	var toParser = function (storyInfo) {
+		return A2(
+			elm$url$Url$Parser$map,
+			storyInfo,
+			elm$url$Url$Parser$s(storyInfo.a1));
+	};
+	return elm$url$Url$Parser$oneOf(
+		A2(elm$core$List$map, toParser, author$project$Story$AllStories$allStories));
 }();
-var elm$json$Json$Decode$bool = _Json_decodeBool;
-var author$project$Main$loaded = _Platform_incomingPort('loaded', elm$json$Json$Decode$bool);
-var author$project$Components$getClassName = function (_n0) {
-	var id = _n0.a;
-	var components = _n0.b;
-	var _n1 = A2(elm$core$Dict$get, 'classname', components);
-	if ((!_n1.$) && (_n1.a.$ === 3)) {
-		var className = _n1.a.a;
-		return className;
-	} else {
-		return '';
+var elm$url$Url$Parser$top = function (state) {
+	return _List_fromArray(
+		[state]);
+};
+var author$project$Route$parser = elm$url$Url$Parser$oneOf(
+	_List_fromArray(
+		[
+			A2(elm$url$Url$Parser$map, author$project$Route$Home, elm$url$Url$Parser$top),
+			A2(elm$url$Url$Parser$map, author$project$Route$Story, author$project$Story$parser)
+		]));
+var elm$core$Maybe$withDefault = F2(
+	function (_default, maybe) {
+		if (!maybe.$) {
+			var value = maybe.a;
+			return value;
+		} else {
+			return _default;
+		}
+	});
+var elm$url$Url$Parser$getFirstMatch = function (states) {
+	getFirstMatch:
+	while (true) {
+		if (!states.b) {
+			return elm$core$Maybe$Nothing;
+		} else {
+			var state = states.a;
+			var rest = states.b;
+			var _n1 = state.o;
+			if (!_n1.b) {
+				return elm$core$Maybe$Just(state.k);
+			} else {
+				if ((_n1.a === '') && (!_n1.b.b)) {
+					return elm$core$Maybe$Just(state.k);
+				} else {
+					var $temp$states = rest;
+					states = $temp$states;
+					continue getFirstMatch;
+				}
+			}
+		}
 	}
 };
-var author$project$Components$getName = function (_n0) {
-	var id = _n0.a;
-	var components = _n0.b;
-	var _n1 = A2(elm$core$Dict$get, 'name', components);
-	if ((!_n1.$) && (!_n1.a.$)) {
-		var name = _n1.a.a;
-		return name;
+var elm$url$Url$Parser$removeFinalEmpty = function (segments) {
+	if (!segments.b) {
+		return _List_Nil;
 	} else {
-		return id;
+		if ((segments.a === '') && (!segments.b.b)) {
+			return _List_Nil;
+		} else {
+			var segment = segments.a;
+			var rest = segments.b;
+			return A2(
+				elm$core$List$cons,
+				segment,
+				elm$url$Url$Parser$removeFinalEmpty(rest));
+		}
 	}
 };
+var elm$url$Url$Parser$preparePath = function (path) {
+	var _n0 = A2(elm$core$String$split, '/', path);
+	if (_n0.b && (_n0.a === '')) {
+		var segments = _n0.b;
+		return elm$url$Url$Parser$removeFinalEmpty(segments);
+	} else {
+		var segments = _n0;
+		return elm$url$Url$Parser$removeFinalEmpty(segments);
+	}
+};
+var elm$url$Url$percentDecode = _Url_percentDecode;
+var elm$url$Url$Parser$addToParametersHelp = F2(
+	function (value, maybeList) {
+		if (maybeList.$ === 1) {
+			return elm$core$Maybe$Just(
+				_List_fromArray(
+					[value]));
+		} else {
+			var list = maybeList.a;
+			return elm$core$Maybe$Just(
+				A2(elm$core$List$cons, value, list));
+		}
+	});
+var elm$url$Url$Parser$addParam = F2(
+	function (segment, dict) {
+		var _n0 = A2(elm$core$String$split, '=', segment);
+		if ((_n0.b && _n0.b.b) && (!_n0.b.b.b)) {
+			var rawKey = _n0.a;
+			var _n1 = _n0.b;
+			var rawValue = _n1.a;
+			var _n2 = elm$url$Url$percentDecode(rawKey);
+			if (_n2.$ === 1) {
+				return dict;
+			} else {
+				var key = _n2.a;
+				var _n3 = elm$url$Url$percentDecode(rawValue);
+				if (_n3.$ === 1) {
+					return dict;
+				} else {
+					var value = _n3.a;
+					return A3(
+						elm$core$Dict$update,
+						key,
+						elm$url$Url$Parser$addToParametersHelp(value),
+						dict);
+				}
+			}
+		} else {
+			return dict;
+		}
+	});
+var elm$url$Url$Parser$prepareQuery = function (maybeQuery) {
+	if (maybeQuery.$ === 1) {
+		return elm$core$Dict$empty;
+	} else {
+		var qry = maybeQuery.a;
+		return A3(
+			elm$core$List$foldr,
+			elm$url$Url$Parser$addParam,
+			elm$core$Dict$empty,
+			A2(elm$core$String$split, '&', qry));
+	}
+};
+var elm$url$Url$Parser$parse = F2(
+	function (_n0, url) {
+		var parser = _n0;
+		return elm$url$Url$Parser$getFirstMatch(
+			parser(
+				A5(
+					elm$url$Url$Parser$State,
+					_List_Nil,
+					elm$url$Url$Parser$preparePath(url.a_),
+					elm$url$Url$Parser$prepareQuery(url.av),
+					url.aN,
+					elm$core$Basics$identity)));
+	});
+var author$project$Route$fromUrl = function (url) {
+	return A2(
+		elm$url$Url$Parser$parse,
+		author$project$Route$parser,
+		_Utils_update(
+			url,
+			{
+				aN: elm$core$Maybe$Nothing,
+				a_: A2(elm$core$Maybe$withDefault, '', url.aN)
+			}));
+};
+var author$project$Main$init = F3(
+	function (flags, url, navKey) {
+		return A2(
+			author$project$Main$changeRouteTo,
+			author$project$Route$fromUrl(url),
+			A2(
+				author$project$Main$NotFound,
+				navKey,
+				{}));
+	});
+var author$project$Main$GotSubscription = function (a) {
+	return {$: 7, a: a};
+};
+var elm$json$Json$Decode$value = _Json_decodeValue;
+var author$project$Port$fromJavaScript = _Platform_incomingPort('fromJavaScript', elm$json$Json$Decode$value);
+var author$project$Main$subscriptions = function (_n0) {
+	return author$project$Port$fromJavaScript(author$project$Main$GotSubscription);
+};
+var author$project$Main$GotNotFoundMsg = function (a) {
+	return {$: 4, a: a};
+};
+var author$project$Main$setLoadedOnModel = F2(
+	function (loaded, model) {
+		switch (model.$) {
+			case 0:
+				return model;
+			case 1:
+				var navKey = model.a;
+				var homeModel = model.c;
+				return A3(author$project$Main$Home, navKey, loaded, homeModel);
+			default:
+				var navKey = model.a;
+				var storyModel = model.c;
+				return A3(author$project$Main$Story, navKey, loaded, storyModel);
+		}
+	});
+var elm$browser$Browser$External = function (a) {
+	return {$: 1, a: a};
+};
+var elm$browser$Browser$Internal = function (a) {
+	return {$: 0, a: a};
+};
+var elm$browser$Browser$Dom$NotFound = elm$core$Basics$identity;
+var elm$core$Basics$never = function (_n0) {
+	never:
+	while (true) {
+		var nvr = _n0;
+		var $temp$_n0 = nvr;
+		_n0 = $temp$_n0;
+		continue never;
+	}
+};
+var elm$core$Task$Perform = elm$core$Basics$identity;
+var elm$core$Task$succeed = _Scheduler_succeed;
+var elm$core$Task$init = elm$core$Task$succeed(0);
+var elm$core$Task$andThen = _Scheduler_andThen;
+var elm$core$Task$map = F2(
+	function (func, taskA) {
+		return A2(
+			elm$core$Task$andThen,
+			function (a) {
+				return elm$core$Task$succeed(
+					func(a));
+			},
+			taskA);
+	});
+var elm$core$Task$map2 = F3(
+	function (func, taskA, taskB) {
+		return A2(
+			elm$core$Task$andThen,
+			function (a) {
+				return A2(
+					elm$core$Task$andThen,
+					function (b) {
+						return elm$core$Task$succeed(
+							A2(func, a, b));
+					},
+					taskB);
+			},
+			taskA);
+	});
+var elm$core$Task$sequence = function (tasks) {
+	return A3(
+		elm$core$List$foldr,
+		elm$core$Task$map2(elm$core$List$cons),
+		elm$core$Task$succeed(_List_Nil),
+		tasks);
+};
+var elm$core$Platform$sendToApp = _Platform_sendToApp;
+var elm$core$Task$spawnCmd = F2(
+	function (router, _n0) {
+		var task = _n0;
+		return _Scheduler_spawn(
+			A2(
+				elm$core$Task$andThen,
+				elm$core$Platform$sendToApp(router),
+				task));
+	});
+var elm$core$Task$onEffects = F3(
+	function (router, commands, state) {
+		return A2(
+			elm$core$Task$map,
+			function (_n0) {
+				return 0;
+			},
+			elm$core$Task$sequence(
+				A2(
+					elm$core$List$map,
+					elm$core$Task$spawnCmd(router),
+					commands)));
+	});
+var elm$core$Task$onSelfMsg = F3(
+	function (_n0, _n1, _n2) {
+		return elm$core$Task$succeed(0);
+	});
+var elm$core$Task$cmdMap = F2(
+	function (tagger, _n0) {
+		var task = _n0;
+		return A2(elm$core$Task$map, tagger, task);
+	});
+_Platform_effectManagers['Task'] = _Platform_createManager(elm$core$Task$init, elm$core$Task$onEffects, elm$core$Task$onSelfMsg, elm$core$Task$cmdMap);
+var elm$core$Task$command = _Platform_leaf('Task');
+var elm$core$Task$perform = F2(
+	function (toMessage, task) {
+		return elm$core$Task$command(
+			A2(elm$core$Task$map, toMessage, task));
+	});
+var elm$json$Json$Decode$map = _Json_map1;
+var elm$json$Json$Decode$map2 = _Json_map2;
+var elm$json$Json$Decode$succeed = _Json_succeed;
+var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
+	switch (handler.$) {
+		case 0:
+			return 0;
+		case 1:
+			return 1;
+		case 2:
+			return 2;
+		default:
+			return 3;
+	}
+};
+var elm$core$String$length = _String_length;
+var elm$core$String$slice = _String_slice;
+var elm$core$String$dropLeft = F2(
+	function (n, string) {
+		return (n < 1) ? string : A3(
+			elm$core$String$slice,
+			n,
+			elm$core$String$length(string),
+			string);
+	});
+var elm$core$String$startsWith = _String_startsWith;
+var elm$url$Url$Http = 0;
+var elm$url$Url$Https = 1;
+var elm$core$String$indexes = _String_indexes;
+var elm$core$String$isEmpty = function (string) {
+	return string === '';
+};
+var elm$core$String$left = F2(
+	function (n, string) {
+		return (n < 1) ? '' : A3(elm$core$String$slice, 0, n, string);
+	});
+var elm$core$String$contains = _String_contains;
+var elm$core$String$toInt = _String_toInt;
+var elm$url$Url$Url = F6(
+	function (protocol, host, port_, path, query, fragment) {
+		return {aN: fragment, ai: host, a_: path, ar: port_, au: protocol, av: query};
+	});
+var elm$url$Url$chompBeforePath = F5(
+	function (protocol, path, params, frag, str) {
+		if (elm$core$String$isEmpty(str) || A2(elm$core$String$contains, '@', str)) {
+			return elm$core$Maybe$Nothing;
+		} else {
+			var _n0 = A2(elm$core$String$indexes, ':', str);
+			if (!_n0.b) {
+				return elm$core$Maybe$Just(
+					A6(elm$url$Url$Url, protocol, str, elm$core$Maybe$Nothing, path, params, frag));
+			} else {
+				if (!_n0.b.b) {
+					var i = _n0.a;
+					var _n1 = elm$core$String$toInt(
+						A2(elm$core$String$dropLeft, i + 1, str));
+					if (_n1.$ === 1) {
+						return elm$core$Maybe$Nothing;
+					} else {
+						var port_ = _n1;
+						return elm$core$Maybe$Just(
+							A6(
+								elm$url$Url$Url,
+								protocol,
+								A2(elm$core$String$left, i, str),
+								port_,
+								path,
+								params,
+								frag));
+					}
+				} else {
+					return elm$core$Maybe$Nothing;
+				}
+			}
+		}
+	});
+var elm$url$Url$chompBeforeQuery = F4(
+	function (protocol, params, frag, str) {
+		if (elm$core$String$isEmpty(str)) {
+			return elm$core$Maybe$Nothing;
+		} else {
+			var _n0 = A2(elm$core$String$indexes, '/', str);
+			if (!_n0.b) {
+				return A5(elm$url$Url$chompBeforePath, protocol, '/', params, frag, str);
+			} else {
+				var i = _n0.a;
+				return A5(
+					elm$url$Url$chompBeforePath,
+					protocol,
+					A2(elm$core$String$dropLeft, i, str),
+					params,
+					frag,
+					A2(elm$core$String$left, i, str));
+			}
+		}
+	});
+var elm$url$Url$chompBeforeFragment = F3(
+	function (protocol, frag, str) {
+		if (elm$core$String$isEmpty(str)) {
+			return elm$core$Maybe$Nothing;
+		} else {
+			var _n0 = A2(elm$core$String$indexes, '?', str);
+			if (!_n0.b) {
+				return A4(elm$url$Url$chompBeforeQuery, protocol, elm$core$Maybe$Nothing, frag, str);
+			} else {
+				var i = _n0.a;
+				return A4(
+					elm$url$Url$chompBeforeQuery,
+					protocol,
+					elm$core$Maybe$Just(
+						A2(elm$core$String$dropLeft, i + 1, str)),
+					frag,
+					A2(elm$core$String$left, i, str));
+			}
+		}
+	});
+var elm$url$Url$chompAfterProtocol = F2(
+	function (protocol, str) {
+		if (elm$core$String$isEmpty(str)) {
+			return elm$core$Maybe$Nothing;
+		} else {
+			var _n0 = A2(elm$core$String$indexes, '#', str);
+			if (!_n0.b) {
+				return A3(elm$url$Url$chompBeforeFragment, protocol, elm$core$Maybe$Nothing, str);
+			} else {
+				var i = _n0.a;
+				return A3(
+					elm$url$Url$chompBeforeFragment,
+					protocol,
+					elm$core$Maybe$Just(
+						A2(elm$core$String$dropLeft, i + 1, str)),
+					A2(elm$core$String$left, i, str));
+			}
+		}
+	});
+var elm$url$Url$fromString = function (str) {
+	return A2(elm$core$String$startsWith, 'http://', str) ? A2(
+		elm$url$Url$chompAfterProtocol,
+		0,
+		A2(elm$core$String$dropLeft, 7, str)) : (A2(elm$core$String$startsWith, 'https://', str) ? A2(
+		elm$url$Url$chompAfterProtocol,
+		1,
+		A2(elm$core$String$dropLeft, 8, str)) : elm$core$Maybe$Nothing);
+};
+var elm$browser$Browser$Navigation$pushUrl = _Browser_pushUrl;
+var author$project$Page$Home$update = F3(
+	function (navKey, msg, model) {
+		var slug = msg;
+		var url = '#/' + slug;
+		return _Utils_Tuple2(
+			model,
+			A2(elm$browser$Browser$Navigation$pushUrl, navKey, url));
+	});
+var author$project$Page$NotFound$update = F3(
+	function (navKey, msg, model) {
+		return _Utils_Tuple2(
+			model,
+			A2(elm$browser$Browser$Navigation$pushUrl, navKey, '/'));
+	});
 var elm$core$Basics$composeR = F3(
 	function (f, g, x) {
 		return g(
@@ -6056,31 +6820,44 @@ var elm$core$List$head = function (list) {
 		return elm$core$Maybe$Nothing;
 	}
 };
-var elm$core$Maybe$withDefault = F2(
-	function (_default, maybe) {
-		if (!maybe.$) {
-			var value = maybe.a;
-			return value;
-		} else {
-			return _default;
-		}
-	});
-var author$project$Main$findEntity = function (id) {
-	return A2(
-		elm$core$Maybe$withDefault,
-		author$project$Components$entity(id),
-		elm$core$List$head(
-			A2(
-				elm$core$List$filter,
+var author$project$Story$Components$findEntity = F2(
+	function (manifest, id) {
+		return A2(
+			elm$core$Maybe$withDefault,
+			author$project$Story$Components$entity(id),
+			elm$core$List$head(
 				A2(
-					elm$core$Basics$composeR,
-					elm$core$Tuple$first,
-					elm$core$Basics$eq(id)),
-				_Utils_ap(
-					author$project$Manifest$items,
-					_Utils_ap(author$project$Manifest$locations, author$project$Manifest$characters)))));
+					elm$core$List$filter,
+					A2(
+						elm$core$Basics$composeR,
+						elm$core$Tuple$first,
+						elm$core$Basics$eq(id)),
+					_Utils_ap(
+						manifest.aj,
+						_Utils_ap(manifest.an, manifest.ab)))));
+	});
+var author$project$Story$Components$getClassName = function (_n0) {
+	var id = _n0.a;
+	var components = _n0.b;
+	var _n1 = A2(elm$core$Dict$get, 'classname', components);
+	if ((!_n1.$) && (_n1.a.$ === 3)) {
+		var className = _n1.a.a;
+		return className;
+	} else {
+		return '';
+	}
 };
-var author$project$Main$speak = _Platform_outgoingPort('speak', elm$core$Basics$identity);
+var author$project$Story$Components$getName = function (_n0) {
+	var id = _n0.a;
+	var components = _n0.b;
+	var _n1 = A2(elm$core$Dict$get, 'name', components);
+	if ((!_n1.$) && (!_n1.a.$)) {
+		var name = _n1.a.a;
+		return name;
+	} else {
+		return id;
+	}
+};
 var elm$core$Maybe$andThen = F2(
 	function (callback, maybeValue) {
 		if (!maybeValue.$) {
@@ -6100,7 +6877,6 @@ var elm$core$Maybe$map = F2(
 			return elm$core$Maybe$Nothing;
 		}
 	});
-var elm$json$Json$Encode$string = _Json_wrap;
 var jschomay$elm_narrative_engine$Types$EndStory = function (a) {
 	return {$: 10, a: a};
 };
@@ -6279,9 +7055,9 @@ var jschomay$elm_narrative_engine$Engine$Manifest$itemIsInLocation = F3(
 var jschomay$elm_narrative_engine$Engine$Rules$matchesCondition = F2(
 	function (_n0, condition) {
 		var history = _n0.e;
-		var currentLocation = _n0.aD;
-		var currentScene = _n0.M;
-		var manifest = _n0.i;
+		var currentLocation = _n0.J;
+		var currentScene = _n0.O;
+		var manifest = _n0.aV;
 		switch (condition.$) {
 			case 0:
 				var item = condition.a;
@@ -6351,19 +7127,19 @@ var jschomay$elm_narrative_engine$Engine$Rules$matchesInteraction = F3(
 	});
 var jschomay$elm_narrative_engine$Engine$Rules$matchesRule = F3(
 	function (story, interaction, rule) {
-		var currentLocation = story.aD;
-		var currentScene = story.M;
-		var manifest = story.i;
+		var currentLocation = story.J;
+		var currentScene = story.O;
+		var manifest = story.aV;
 		var history = story.e;
-		return A3(jschomay$elm_narrative_engine$Engine$Rules$matchesInteraction, manifest, rule.aN, interaction) && A2(
+		return A3(jschomay$elm_narrative_engine$Engine$Rules$matchesInteraction, manifest, rule.aU, interaction) && A2(
 			elm$core$List$all,
 			jschomay$elm_narrative_engine$Engine$Rules$matchesCondition(story),
-			rule.aC);
+			rule.aI);
 	});
 var jschomay$elm_narrative_engine$Engine$Rules$numConstrictionsWeight = A2(
 	elm$core$Basics$composeR,
 	function ($) {
-		return $.aC;
+		return $.aI;
 	},
 	elm$core$List$length);
 var jschomay$elm_narrative_engine$Engine$Rules$sceneConstraintWeight = function (rule) {
@@ -6374,10 +7150,10 @@ var jschomay$elm_narrative_engine$Engine$Rules$sceneConstraintWeight = function 
 			return false;
 		}
 	};
-	return A2(elm$core$List$any, hasSceneConstraints, rule.aC) ? 300 : 0;
+	return A2(elm$core$List$any, hasSceneConstraints, rule.aI) ? 300 : 0;
 };
 var jschomay$elm_narrative_engine$Engine$Rules$specificityWeight = function (rule) {
-	var _n0 = rule.aN;
+	var _n0 = rule.aU;
 	switch (_n0.$) {
 		case 4:
 			return 200;
@@ -6409,7 +7185,7 @@ var jschomay$elm_narrative_engine$Engine$Rules$findMatchingRule = F2(
 					elm$core$Basics$composeR,
 					elm$core$Tuple$second,
 					A2(jschomay$elm_narrative_engine$Engine$Rules$matchesRule, story, interactableId)),
-				elm$core$Dict$toList(story.aY)));
+				elm$core$Dict$toList(story.a0)));
 	});
 var jschomay$elm_narrative_engine$Types$MoveItemToInventory = function (a) {
 	return {$: 5, a: a};
@@ -6418,10 +7194,10 @@ var jschomay$elm_narrative_engine$Engine$update = F2(
 	function (interactableId, model) {
 		var story = model;
 		var matchingRule = A2(jschomay$elm_narrative_engine$Engine$Rules$findMatchingRule, story, interactableId);
-		var defaultChanges = A2(jschomay$elm_narrative_engine$Engine$Manifest$isLocation, interactableId, story.i) ? _List_fromArray(
+		var defaultChanges = A2(jschomay$elm_narrative_engine$Engine$Manifest$isLocation, interactableId, story.aV) ? _List_fromArray(
 			[
 				jschomay$elm_narrative_engine$Types$MoveTo(interactableId)
-			]) : (A2(jschomay$elm_narrative_engine$Engine$Manifest$isItem, interactableId, story.i) ? _List_fromArray(
+			]) : (A2(jschomay$elm_narrative_engine$Engine$Manifest$isItem, interactableId, story.aV) ? _List_fromArray(
 			[
 				jschomay$elm_narrative_engine$Types$MoveItemToInventory(interactableId)
 			]) : _List_Nil);
@@ -6434,7 +7210,7 @@ var jschomay$elm_narrative_engine$Engine$update = F2(
 					elm$core$Basics$composeR,
 					elm$core$Tuple$second,
 					function ($) {
-						return $.az;
+						return $.aH;
 					}),
 				matchingRule));
 		var addHistory = function (_n0) {
@@ -6453,16 +7229,17 @@ var jschomay$elm_narrative_engine$Engine$update = F2(
 				A2(jschomay$elm_narrative_engine$Engine$changeWorld, changes, model)),
 			A2(elm$core$Maybe$map, elm$core$Tuple$first, matchingRule));
 	});
-var author$project$Main$update = F2(
-	function (msg, model) {
+var author$project$Page$Story$update = F3(
+	function (navKey, msg, model) {
 		switch (msg.$) {
 			case 0:
 				var interactableId = msg.a;
+				var manifest = author$project$Story$getManifest(model.y);
 				var _n1 = A2(jschomay$elm_narrative_engine$Engine$update, interactableId, model.h);
 				var newEngineModel = _n1.a;
 				var maybeMatchedRuleId = _n1.b;
 				var checkEnd = function () {
-					if ((!maybeMatchedRuleId.$) && (maybeMatchedRuleId.a === 'Ending')) {
+					if ((!maybeMatchedRuleId.$) && (maybeMatchedRuleId.a === 'TheEnd')) {
 						return jschomay$elm_narrative_engine$Engine$changeWorld(
 							_List_fromArray(
 								[
@@ -6473,11 +7250,11 @@ var author$project$Main$update = F2(
 					}
 				}();
 				var narrativeForThisInteraction = {
-					aL: author$project$Components$getClassName(
-						author$project$Main$findEntity(interactableId)),
-					aM: author$project$Components$getName(
-						author$project$Main$findEntity(interactableId)),
-					aT: A2(
+					aS: author$project$Story$Components$getClassName(
+						A2(author$project$Story$Components$findEntity, manifest, interactableId)),
+					aT: author$project$Story$Components$getName(
+						A2(author$project$Story$Components$findEntity, manifest, interactableId)),
+					Q: A2(
 						elm$core$Maybe$withDefault,
 						A2(
 							elm$core$Maybe$withDefault,
@@ -6485,13 +7262,13 @@ var author$project$Main$update = F2(
 							A2(
 								elm$core$Maybe$map,
 								function ($) {
-									return $.aT;
+									return $.Q;
 								},
-								elm$core$List$head(model.s))),
+								elm$core$List$head(model.j))),
 						A2(
 							elm$core$Maybe$andThen,
 							function (id) {
-								return A2(elm$core$Dict$get, id, model.O);
+								return A2(elm$core$Dict$get, id, model.R);
 							},
 							maybeMatchedRuleId))
 				};
@@ -6500,33 +7277,350 @@ var author$project$Main$update = F2(
 						model,
 						{
 							h: checkEnd(newEngineModel),
-							s: A2(elm$core$List$cons, narrativeForThisInteraction, model.s)
+							j: A2(elm$core$List$cons, narrativeForThisInteraction, model.j)
 						}),
-					author$project$Main$speak(
-						elm$json$Json$Encode$string(narrativeForThisInteraction.aT)));
+					elm$core$Platform$Cmd$none);
 			case 1:
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{E: true}),
-					author$project$Main$speak(
-						elm$json$Json$Encode$string(author$project$Narrative$startingNarrative.aT)));
+				return author$project$Page$Story$init(model.y);
 			default:
-				var _n3 = author$project$Main$init;
-				var initModel = _n3.a;
-				var cmds = _n3.b;
 				return _Utils_Tuple2(
-					_Utils_update(
-						initModel,
-						{E: true}),
-					cmds);
+					model,
+					A2(elm$browser$Browser$Navigation$pushUrl, navKey, '/'));
 		}
 	});
-var author$project$ClientTypes$Interact = function (a) {
+var NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom = elm$json$Json$Decode$map2(elm$core$Basics$apR);
+var elm$json$Json$Decode$field = _Json_decodeField;
+var NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required = F3(
+	function (key, valDecoder, decoder) {
+		return A2(
+			NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom,
+			A2(elm$json$Json$Decode$field, key, valDecoder),
+			decoder);
+	});
+var elm$json$Json$Decode$andThen = _Json_andThen;
+var NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$resolve = elm$json$Json$Decode$andThen(elm$core$Basics$identity);
+var author$project$Port$ImagesLoaded = 0;
+var elm$json$Json$Decode$fail = _Json_fail;
+var elm$json$Json$Decode$string = _Json_decodeString;
+var author$project$Port$decode = function () {
+	var decoder = function (command) {
+		if (command === 'IMAGES_LOADED') {
+			return elm$json$Json$Decode$succeed(0);
+		} else {
+			return elm$json$Json$Decode$fail('Invalid command received');
+		}
+	};
+	return NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$resolve(
+		A3(
+			NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$required,
+			'command',
+			elm$json$Json$Decode$string,
+			elm$json$Json$Decode$succeed(decoder)));
+}();
+var elm$browser$Browser$Navigation$load = _Browser_load;
+var elm$json$Json$Decode$decodeValue = _Json_run;
+var elm$url$Url$addPort = F2(
+	function (maybePort, starter) {
+		if (maybePort.$ === 1) {
+			return starter;
+		} else {
+			var port_ = maybePort.a;
+			return starter + (':' + elm$core$String$fromInt(port_));
+		}
+	});
+var elm$url$Url$addPrefixed = F3(
+	function (prefix, maybeSegment, starter) {
+		if (maybeSegment.$ === 1) {
+			return starter;
+		} else {
+			var segment = maybeSegment.a;
+			return _Utils_ap(
+				starter,
+				_Utils_ap(prefix, segment));
+		}
+	});
+var elm$url$Url$toString = function (url) {
+	var http = function () {
+		var _n0 = url.au;
+		if (!_n0) {
+			return 'http://';
+		} else {
+			return 'https://';
+		}
+	}();
+	return A3(
+		elm$url$Url$addPrefixed,
+		'#',
+		url.aN,
+		A3(
+			elm$url$Url$addPrefixed,
+			'?',
+			url.av,
+			_Utils_ap(
+				A2(
+					elm$url$Url$addPort,
+					url.ar,
+					_Utils_ap(http, url.ai)),
+				url.a_)));
+};
+var author$project$Main$update = F2(
+	function (msg, model) {
+		var _n0 = _Utils_Tuple2(msg, model);
+		_n0$7:
+		while (true) {
+			switch (_n0.a.$) {
+				case 0:
+					var _n1 = _n0.a;
+					return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+				case 2:
+					var urlRequest = _n0.a.a;
+					if (!urlRequest.$) {
+						var url = urlRequest.a;
+						var _n3 = url.aN;
+						if (_n3.$ === 1) {
+							return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+						} else {
+							return _Utils_Tuple2(
+								model,
+								A2(
+									elm$browser$Browser$Navigation$pushUrl,
+									author$project$Main$getNavKey(model),
+									elm$url$Url$toString(url)));
+						}
+					} else {
+						var href = urlRequest.a;
+						return _Utils_Tuple2(
+							model,
+							elm$browser$Browser$Navigation$load(href));
+					}
+				case 3:
+					var url = _n0.a.a;
+					return A2(
+						author$project$Main$changeRouteTo,
+						author$project$Route$fromUrl(url),
+						model);
+				case 4:
+					if (!_n0.b.$) {
+						var subMsg = _n0.a.a;
+						var _n4 = _n0.b;
+						var navKey = _n4.a;
+						var notFoundModel = _n4.b;
+						return A4(
+							author$project$Main$updateWith,
+							author$project$Main$NotFound(navKey),
+							author$project$Main$GotNotFoundMsg,
+							model,
+							A3(author$project$Page$NotFound$update, navKey, subMsg, notFoundModel));
+					} else {
+						break _n0$7;
+					}
+				case 5:
+					if (_n0.b.$ === 1) {
+						var subMsg = _n0.a.a;
+						var _n5 = _n0.b;
+						var navKey = _n5.a;
+						var loaded = _n5.b;
+						var homeModel = _n5.c;
+						return A4(
+							author$project$Main$updateWith,
+							A2(author$project$Main$Home, navKey, loaded),
+							author$project$Main$GotHomeMsg,
+							model,
+							A3(author$project$Page$Home$update, navKey, subMsg, homeModel));
+					} else {
+						break _n0$7;
+					}
+				case 6:
+					if (_n0.b.$ === 2) {
+						var subMsg = _n0.a.a;
+						var _n6 = _n0.b;
+						var navKey = _n6.a;
+						var loaded = _n6.b;
+						var storyModel = _n6.c;
+						return A4(
+							author$project$Main$updateWith,
+							A2(author$project$Main$Story, navKey, loaded),
+							author$project$Main$GotStoryMsg,
+							model,
+							A3(author$project$Page$Story$update, navKey, subMsg, storyModel));
+					} else {
+						break _n0$7;
+					}
+				case 7:
+					var json = _n0.a.a;
+					var _n7 = A2(elm$json$Json$Decode$decodeValue, author$project$Port$decode, json);
+					if (!_n7.$) {
+						var portMsg = _n7.a;
+						return _Utils_Tuple2(
+							A2(author$project$Main$setLoadedOnModel, true, model),
+							elm$core$Platform$Cmd$none);
+					} else {
+						return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+					}
+				default:
+					break _n0$7;
+			}
+		}
+		return _Utils_Tuple2(model, elm$core$Platform$Cmd$none);
+	});
+var author$project$Page$Home$SelectedStory = elm$core$Basics$identity;
+var elm$html$Html$div = _VirtualDom_node('div');
+var elm$html$Html$img = _VirtualDom_node('img');
+var elm$html$Html$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			elm$json$Json$Encode$string(string));
+	});
+var elm$html$Html$Attributes$alt = elm$html$Html$Attributes$stringProperty('alt');
+var elm$html$Html$Attributes$class = elm$html$Html$Attributes$stringProperty('className');
+var elm$html$Html$Attributes$src = function (url) {
+	return A2(
+		elm$html$Html$Attributes$stringProperty,
+		'src',
+		_VirtualDom_noJavaScriptOrHtmlUri(url));
+};
+var elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 0, a: a};
 };
-var author$project$ClientTypes$Restart = {$: 2};
-var author$project$Components$getImage = function (_n0) {
+var elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
+var elm$html$Html$Events$on = F2(
+	function (event, decoder) {
+		return A2(
+			elm$virtual_dom$VirtualDom$on,
+			event,
+			elm$virtual_dom$VirtualDom$Normal(decoder));
+	});
+var elm$html$Html$Events$onClick = function (msg) {
+	return A2(
+		elm$html$Html$Events$on,
+		'click',
+		elm$json$Json$Decode$succeed(msg));
+};
+var author$project$Page$Home$viewStory = function (storyInfo) {
+	return A2(
+		elm$html$Html$div,
+		_List_fromArray(
+			[
+				elm$html$Html$Attributes$class('story__item'),
+				elm$html$Html$Events$onClick(storyInfo.a1)
+			]),
+		_List_fromArray(
+			[
+				A2(
+				elm$html$Html$img,
+				_List_fromArray(
+					[
+						elm$html$Html$Attributes$src(storyInfo.ac),
+						elm$html$Html$Attributes$alt(storyInfo.Y)
+					]),
+				_List_Nil)
+			]));
+};
+var author$project$Page$Home$view = function (model) {
+	return {
+		aJ: A2(
+			elm$html$Html$div,
+			_List_fromArray(
+				[
+					elm$html$Html$Attributes$class('page page__home')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					elm$html$Html$div,
+					_List_fromArray(
+						[
+							elm$html$Html$Attributes$class('story__list')
+						]),
+					A2(elm$core$List$map, author$project$Page$Home$viewStory, model.W))
+				])),
+		Y: 'Story Telling'
+	};
+};
+var author$project$Page$NotFound$GoHome = 0;
+var elm$html$Html$button = _VirtualDom_node('button');
+var elm$html$Html$h1 = _VirtualDom_node('h1');
+var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
+var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
+var author$project$Page$NotFound$view = function (model) {
+	return {
+		aJ: A2(
+			elm$html$Html$div,
+			_List_Nil,
+			_List_fromArray(
+				[
+					A2(
+					elm$html$Html$button,
+					_List_fromArray(
+						[
+							elm$html$Html$Events$onClick(0)
+						]),
+					_List_fromArray(
+						[
+							elm$html$Html$text('Go Home')
+						])),
+					A2(
+					elm$html$Html$h1,
+					_List_Nil,
+					_List_fromArray(
+						[
+							elm$html$Html$text('not found')
+						]))
+				])),
+		Y: 'Not Found'
+	};
+};
+var jschomay$elm_narrative_engine$Engine$getCharactersInCurrentLocation = function (_n0) {
+	var story = _n0;
+	return A2(jschomay$elm_narrative_engine$Engine$Manifest$getCharactersInLocation, story.J, story.aV);
+};
+var jschomay$elm_narrative_engine$Engine$getCurrentLocation = function (_n0) {
+	var story = _n0;
+	return story.J;
+};
+var jschomay$elm_narrative_engine$Engine$getEnding = function (_n0) {
+	var story = _n0;
+	return story.X;
+};
+var jschomay$elm_narrative_engine$Engine$getItemsInCurrentLocation = function (_n0) {
+	var story = _n0;
+	return A2(jschomay$elm_narrative_engine$Engine$Manifest$getItemsInLocation, story.J, story.aV);
+};
+var jschomay$elm_narrative_engine$Engine$getItemsInInventory = function (_n0) {
+	var story = _n0;
+	return jschomay$elm_narrative_engine$Engine$Manifest$getItemsInInventory(story.aV);
+};
+var author$project$Page$Story$getDisplayState = function (model) {
+	var manifest = author$project$Story$getManifest(model.y);
+	return {
+		N: A2(
+			elm$core$List$map,
+			author$project$Story$Components$findEntity(manifest),
+			jschomay$elm_narrative_engine$Engine$getCharactersInCurrentLocation(model.h)),
+		J: A2(
+			author$project$Story$Components$findEntity,
+			manifest,
+			jschomay$elm_narrative_engine$Engine$getCurrentLocation(model.h)),
+		K: jschomay$elm_narrative_engine$Engine$getEnding(model.h),
+		ak: A2(
+			elm$core$List$map,
+			author$project$Story$Components$findEntity(manifest),
+			jschomay$elm_narrative_engine$Engine$getItemsInCurrentLocation(model.h)),
+		al: A2(
+			elm$core$List$map,
+			author$project$Story$Components$findEntity(manifest),
+			jschomay$elm_narrative_engine$Engine$getItemsInInventory(model.h)),
+		j: model.j
+	};
+};
+var author$project$Page$Story$GoHome = {$: 2};
+var author$project$Page$Story$Interact = function (a) {
+	return {$: 0, a: a};
+};
+var author$project$Page$Story$Restart = {$: 1};
+var author$project$Story$Components$getImage = function (_n0) {
 	var id = _n0.a;
 	var components = _n0.b;
 	var _n1 = A2(elm$core$Dict$get, 'image', components);
@@ -6537,38 +7631,7 @@ var author$project$Components$getImage = function (_n0) {
 		return elm$core$Maybe$Nothing;
 	}
 };
-var elm$json$Json$Decode$map = _Json_map1;
-var elm$json$Json$Decode$map2 = _Json_map2;
-var elm$json$Json$Decode$succeed = _Json_succeed;
-var elm$virtual_dom$VirtualDom$toHandlerInt = function (handler) {
-	switch (handler.$) {
-		case 0:
-			return 0;
-		case 1:
-			return 1;
-		case 2:
-			return 2;
-		default:
-			return 3;
-	}
-};
-var elm$html$Html$div = _VirtualDom_node('div');
-var elm$html$Html$img = _VirtualDom_node('img');
-var elm$html$Html$Attributes$stringProperty = F2(
-	function (key, string) {
-		return A2(
-			_VirtualDom_property,
-			key,
-			elm$json$Json$Encode$string(string));
-	});
-var elm$html$Html$Attributes$class = elm$html$Html$Attributes$stringProperty('className');
-var elm$html$Html$Attributes$src = function (url) {
-	return A2(
-		elm$html$Html$Attributes$stringProperty,
-		'src',
-		_VirtualDom_noJavaScriptOrHtmlUri(url));
-};
-var author$project$Theme$Characters$view = function (characters) {
+var author$project$Page$Story$viewCharacters = function (characters) {
 	var toImage = function (character) {
 		return A2(
 			elm$html$Html$div,
@@ -6583,7 +7646,7 @@ var author$project$Theme$Characters$view = function (characters) {
 							A2(
 								elm$core$Maybe$withDefault,
 								'',
-								author$project$Components$getImage(character)))
+								author$project$Story$Components$getImage(character)))
 						]),
 					_List_Nil)
 				]));
@@ -6599,14 +7662,12 @@ var author$project$Theme$Characters$view = function (characters) {
 var elm$core$Basics$neq = _Utils_notEqual;
 var elm$html$Html$h5 = _VirtualDom_node('h5');
 var elm$html$Html$section = _VirtualDom_node('section');
-var elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
-var elm$html$Html$text = elm$virtual_dom$VirtualDom$text;
 var elm_explorations$markdown$Markdown$defaultOptions = {
-	X: elm$core$Maybe$Nothing,
-	aa: elm$core$Maybe$Just(
-		{ay: false, a_: false}),
-	ao: true,
-	aq: false
+	ae: elm$core$Maybe$Nothing,
+	ah: elm$core$Maybe$Just(
+		{aG: false, a5: false}),
+	ay: true,
+	aA: false
 };
 var elm$core$Maybe$isJust = function (maybe) {
 	if (!maybe.$) {
@@ -6617,7 +7678,7 @@ var elm$core$Maybe$isJust = function (maybe) {
 };
 var elm_explorations$markdown$Markdown$toHtmlWith = _Markdown_toHtml;
 var elm_explorations$markdown$Markdown$toHtml = elm_explorations$markdown$Markdown$toHtmlWith(elm_explorations$markdown$Markdown$defaultOptions);
-var author$project$Theme$Storyline$view = F2(
+var author$project$Page$Story$viewStoryLine = F2(
 	function (storyLine, ending) {
 		return A2(
 			elm$html$Html$div,
@@ -6630,7 +7691,7 @@ var author$project$Theme$Storyline$view = F2(
 					function () {
 					var _n0 = elm$core$List$head(storyLine);
 					if (!_n0.$) {
-						var narrative = _n0.a.aT;
+						var narrative = _n0.a.Q;
 						return A2(
 							elm$html$Html$section,
 							_List_Nil,
@@ -6663,40 +7724,33 @@ var author$project$Theme$Storyline$view = F2(
 	});
 var elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
 var elm$html$Html$Attributes$style = elm$virtual_dom$VirtualDom$style;
-var elm$virtual_dom$VirtualDom$Normal = function (a) {
-	return {$: 0, a: a};
-};
-var elm$virtual_dom$VirtualDom$on = _VirtualDom_on;
-var elm$html$Html$Events$on = F2(
-	function (event, decoder) {
-		return A2(
-			elm$virtual_dom$VirtualDom$on,
-			event,
-			elm$virtual_dom$VirtualDom$Normal(decoder));
-	});
-var elm$html$Html$Events$onClick = function (msg) {
-	return A2(
-		elm$html$Html$Events$on,
-		'click',
-		elm$json$Json$Decode$succeed(msg));
-};
-var author$project$Theme$Layout$view = function (displayState) {
+var author$project$Page$Story$viewLayout = function (displayState) {
 	return A2(
 		elm$html$Html$div,
 		_List_fromArray(
 			[
 				elm$html$Html$Attributes$class(
-				'Location Location--' + author$project$Components$getClassName(displayState.aD)),
+				'Location Location--' + author$project$Story$Components$getClassName(displayState.J)),
 				A2(
 				elm$html$Html$Attributes$style,
 				'background-image',
 				'url(' + (A2(
 					elm$core$Maybe$withDefault,
 					'',
-					author$project$Components$getImage(displayState.aD)) + ')'))
+					author$project$Story$Components$getImage(displayState.J)) + ')'))
 			]),
 		_List_fromArray(
 			[
+				A2(
+				elm$html$Html$button,
+				_List_fromArray(
+					[
+						elm$html$Html$Events$onClick(author$project$Page$Story$GoHome)
+					]),
+				_List_fromArray(
+					[
+						elm$html$Html$text('Go Home')
+					])),
 				A2(
 				elm$html$Html$div,
 				_List_fromArray(
@@ -6705,7 +7759,7 @@ var author$project$Theme$Layout$view = function (displayState) {
 					]),
 				_List_fromArray(
 					[
-						author$project$Theme$Characters$view(displayState.aB),
+						author$project$Page$Story$viewCharacters(displayState.N),
 						A2(
 						elm$html$Html$div,
 						_List_fromArray(
@@ -6714,24 +7768,24 @@ var author$project$Theme$Layout$view = function (displayState) {
 							]),
 						_List_fromArray(
 							[
-								A2(author$project$Theme$Storyline$view, displayState.s, displayState.aF),
-								(!_Utils_eq(displayState.aF, elm$core$Maybe$Nothing)) ? A2(
-								elm$html$Html$h5,
+								A2(author$project$Page$Story$viewStoryLine, displayState.j, displayState.K),
+								(!_Utils_eq(displayState.K, elm$core$Maybe$Nothing)) ? A2(
+								elm$html$Html$button,
 								_List_fromArray(
 									[
 										elm$html$Html$Attributes$class('StoryRestart'),
-										elm$html$Html$Events$onClick(author$project$ClientTypes$Restart)
+										elm$html$Html$Events$onClick(author$project$Page$Story$Restart)
 									]),
 								_List_fromArray(
 									[
 										elm$html$Html$text('Restart')
 									])) : A2(
-								elm$html$Html$h5,
+								elm$html$Html$button,
 								_List_fromArray(
 									[
 										elm$html$Html$Attributes$class('StoryContinue'),
 										elm$html$Html$Events$onClick(
-										author$project$ClientTypes$Interact('next'))
+										author$project$Page$Story$Interact('next'))
 									]),
 								_List_fromArray(
 									[
@@ -6741,293 +7795,70 @@ var author$project$Theme$Layout$view = function (displayState) {
 					]))
 			]));
 };
-var jschomay$elm_narrative_engine$Engine$getCharactersInCurrentLocation = function (_n0) {
-	var story = _n0;
-	return A2(jschomay$elm_narrative_engine$Engine$Manifest$getCharactersInLocation, story.aD, story.i);
+var author$project$Story$getTitle = function (story) {
+	var title = story.Y;
+	return title;
 };
-var jschomay$elm_narrative_engine$Engine$getCurrentLocation = function (_n0) {
-	var story = _n0;
-	return story.aD;
-};
-var jschomay$elm_narrative_engine$Engine$getEnding = function (_n0) {
-	var story = _n0;
-	return story.T;
-};
-var jschomay$elm_narrative_engine$Engine$getItemsInCurrentLocation = function (_n0) {
-	var story = _n0;
-	return A2(jschomay$elm_narrative_engine$Engine$Manifest$getItemsInLocation, story.aD, story.i);
-};
-var jschomay$elm_narrative_engine$Engine$getItemsInInventory = function (_n0) {
-	var story = _n0;
-	return jschomay$elm_narrative_engine$Engine$Manifest$getItemsInInventory(story.i);
-};
-var author$project$Main$view = function (model) {
-	var currentLocation = author$project$Main$findEntity(
-		jschomay$elm_narrative_engine$Engine$getCurrentLocation(model.h));
-	var displayState = {
-		aB: A2(
-			elm$core$List$map,
-			author$project$Main$findEntity,
-			jschomay$elm_narrative_engine$Engine$getCharactersInCurrentLocation(model.h)),
-		aD: currentLocation,
-		aF: jschomay$elm_narrative_engine$Engine$getEnding(model.h),
-		aP: A2(
-			elm$core$List$map,
-			author$project$Main$findEntity,
-			jschomay$elm_narrative_engine$Engine$getItemsInCurrentLocation(model.h)),
-		aQ: A2(
-			elm$core$List$map,
-			author$project$Main$findEntity,
-			jschomay$elm_narrative_engine$Engine$getItemsInInventory(model.h)),
-		s: model.s
+var author$project$Page$Story$view = function (model) {
+	return {
+		aJ: author$project$Page$Story$viewLayout(
+			author$project$Page$Story$getDisplayState(model)),
+		Y: author$project$Story$getTitle(model.y)
 	};
-	return (!model.E) ? A2(
-		elm$html$Html$div,
-		_List_fromArray(
+};
+var elm$virtual_dom$VirtualDom$map = _VirtualDom_map;
+var elm$html$Html$map = elm$virtual_dom$VirtualDom$map;
+var author$project$Main$view = function (model) {
+	var viewPage = F2(
+		function (_n1, toMsg) {
+			var title = _n1.Y;
+			var content = _n1.aJ;
+			return {
+				_: _List_fromArray(
+					[
+						A2(elm$html$Html$map, toMsg, content)
+					]),
+				Y: title
+			};
+		});
+	var viewLoading = {
+		_: _List_fromArray(
 			[
-				elm$html$Html$Attributes$class('Loading')
+				A2(
+				elm$html$Html$div,
+				_List_Nil,
+				_List_fromArray(
+					[
+						elm$html$Html$text('Loading')
+					]))
 			]),
-		_List_fromArray(
-			[
-				elm$html$Html$text('Loading...')
-			])) : author$project$Theme$Layout$view(displayState);
-};
-var elm$browser$Browser$External = function (a) {
-	return {$: 1, a: a};
-};
-var elm$browser$Browser$Internal = function (a) {
-	return {$: 0, a: a};
-};
-var elm$browser$Browser$Dom$NotFound = elm$core$Basics$identity;
-var elm$core$Basics$never = function (_n0) {
-	never:
-	while (true) {
-		var nvr = _n0;
-		var $temp$_n0 = nvr;
-		_n0 = $temp$_n0;
-		continue never;
+		Y: 'Stories By Iot'
+	};
+	switch (model.$) {
+		case 0:
+			var notFoundModel = model.b;
+			return A2(
+				viewPage,
+				author$project$Page$NotFound$view(notFoundModel),
+				author$project$Main$GotNotFoundMsg);
+		case 1:
+			var loaded = model.b;
+			var homeModel = model.c;
+			return loaded ? A2(
+				viewPage,
+				author$project$Page$Home$view(homeModel),
+				author$project$Main$GotHomeMsg) : viewLoading;
+		default:
+			var loaded = model.b;
+			var storyModel = model.c;
+			return loaded ? A2(
+				viewPage,
+				author$project$Page$Story$view(storyModel),
+				author$project$Main$GotStoryMsg) : viewLoading;
 	}
 };
-var elm$core$Task$Perform = elm$core$Basics$identity;
-var elm$core$Task$succeed = _Scheduler_succeed;
-var elm$core$Task$init = elm$core$Task$succeed(0);
-var elm$core$Task$andThen = _Scheduler_andThen;
-var elm$core$Task$map = F2(
-	function (func, taskA) {
-		return A2(
-			elm$core$Task$andThen,
-			function (a) {
-				return elm$core$Task$succeed(
-					func(a));
-			},
-			taskA);
-	});
-var elm$core$Task$map2 = F3(
-	function (func, taskA, taskB) {
-		return A2(
-			elm$core$Task$andThen,
-			function (a) {
-				return A2(
-					elm$core$Task$andThen,
-					function (b) {
-						return elm$core$Task$succeed(
-							A2(func, a, b));
-					},
-					taskB);
-			},
-			taskA);
-	});
-var elm$core$Task$sequence = function (tasks) {
-	return A3(
-		elm$core$List$foldr,
-		elm$core$Task$map2(elm$core$List$cons),
-		elm$core$Task$succeed(_List_Nil),
-		tasks);
-};
-var elm$core$Platform$sendToApp = _Platform_sendToApp;
-var elm$core$Task$spawnCmd = F2(
-	function (router, _n0) {
-		var task = _n0;
-		return _Scheduler_spawn(
-			A2(
-				elm$core$Task$andThen,
-				elm$core$Platform$sendToApp(router),
-				task));
-	});
-var elm$core$Task$onEffects = F3(
-	function (router, commands, state) {
-		return A2(
-			elm$core$Task$map,
-			function (_n0) {
-				return 0;
-			},
-			elm$core$Task$sequence(
-				A2(
-					elm$core$List$map,
-					elm$core$Task$spawnCmd(router),
-					commands)));
-	});
-var elm$core$Task$onSelfMsg = F3(
-	function (_n0, _n1, _n2) {
-		return elm$core$Task$succeed(0);
-	});
-var elm$core$Task$cmdMap = F2(
-	function (tagger, _n0) {
-		var task = _n0;
-		return A2(elm$core$Task$map, tagger, task);
-	});
-_Platform_effectManagers['Task'] = _Platform_createManager(elm$core$Task$init, elm$core$Task$onEffects, elm$core$Task$onSelfMsg, elm$core$Task$cmdMap);
-var elm$core$Task$command = _Platform_leaf('Task');
-var elm$core$Task$perform = F2(
-	function (toMessage, task) {
-		return elm$core$Task$command(
-			A2(elm$core$Task$map, toMessage, task));
-	});
-var elm$core$String$length = _String_length;
-var elm$core$String$slice = _String_slice;
-var elm$core$String$dropLeft = F2(
-	function (n, string) {
-		return (n < 1) ? string : A3(
-			elm$core$String$slice,
-			n,
-			elm$core$String$length(string),
-			string);
-	});
-var elm$core$String$startsWith = _String_startsWith;
-var elm$url$Url$Http = 0;
-var elm$url$Url$Https = 1;
-var elm$core$String$indexes = _String_indexes;
-var elm$core$String$isEmpty = function (string) {
-	return string === '';
-};
-var elm$core$String$left = F2(
-	function (n, string) {
-		return (n < 1) ? '' : A3(elm$core$String$slice, 0, n, string);
-	});
-var elm$core$String$contains = _String_contains;
-var elm$core$String$toInt = _String_toInt;
-var elm$url$Url$Url = F6(
-	function (protocol, host, port_, path, query, fragment) {
-		return {_: fragment, ab: host, af: path, ah: port_, ak: protocol, al: query};
-	});
-var elm$url$Url$chompBeforePath = F5(
-	function (protocol, path, params, frag, str) {
-		if (elm$core$String$isEmpty(str) || A2(elm$core$String$contains, '@', str)) {
-			return elm$core$Maybe$Nothing;
-		} else {
-			var _n0 = A2(elm$core$String$indexes, ':', str);
-			if (!_n0.b) {
-				return elm$core$Maybe$Just(
-					A6(elm$url$Url$Url, protocol, str, elm$core$Maybe$Nothing, path, params, frag));
-			} else {
-				if (!_n0.b.b) {
-					var i = _n0.a;
-					var _n1 = elm$core$String$toInt(
-						A2(elm$core$String$dropLeft, i + 1, str));
-					if (_n1.$ === 1) {
-						return elm$core$Maybe$Nothing;
-					} else {
-						var port_ = _n1;
-						return elm$core$Maybe$Just(
-							A6(
-								elm$url$Url$Url,
-								protocol,
-								A2(elm$core$String$left, i, str),
-								port_,
-								path,
-								params,
-								frag));
-					}
-				} else {
-					return elm$core$Maybe$Nothing;
-				}
-			}
-		}
-	});
-var elm$url$Url$chompBeforeQuery = F4(
-	function (protocol, params, frag, str) {
-		if (elm$core$String$isEmpty(str)) {
-			return elm$core$Maybe$Nothing;
-		} else {
-			var _n0 = A2(elm$core$String$indexes, '/', str);
-			if (!_n0.b) {
-				return A5(elm$url$Url$chompBeforePath, protocol, '/', params, frag, str);
-			} else {
-				var i = _n0.a;
-				return A5(
-					elm$url$Url$chompBeforePath,
-					protocol,
-					A2(elm$core$String$dropLeft, i, str),
-					params,
-					frag,
-					A2(elm$core$String$left, i, str));
-			}
-		}
-	});
-var elm$url$Url$chompBeforeFragment = F3(
-	function (protocol, frag, str) {
-		if (elm$core$String$isEmpty(str)) {
-			return elm$core$Maybe$Nothing;
-		} else {
-			var _n0 = A2(elm$core$String$indexes, '?', str);
-			if (!_n0.b) {
-				return A4(elm$url$Url$chompBeforeQuery, protocol, elm$core$Maybe$Nothing, frag, str);
-			} else {
-				var i = _n0.a;
-				return A4(
-					elm$url$Url$chompBeforeQuery,
-					protocol,
-					elm$core$Maybe$Just(
-						A2(elm$core$String$dropLeft, i + 1, str)),
-					frag,
-					A2(elm$core$String$left, i, str));
-			}
-		}
-	});
-var elm$url$Url$chompAfterProtocol = F2(
-	function (protocol, str) {
-		if (elm$core$String$isEmpty(str)) {
-			return elm$core$Maybe$Nothing;
-		} else {
-			var _n0 = A2(elm$core$String$indexes, '#', str);
-			if (!_n0.b) {
-				return A3(elm$url$Url$chompBeforeFragment, protocol, elm$core$Maybe$Nothing, str);
-			} else {
-				var i = _n0.a;
-				return A3(
-					elm$url$Url$chompBeforeFragment,
-					protocol,
-					elm$core$Maybe$Just(
-						A2(elm$core$String$dropLeft, i + 1, str)),
-					A2(elm$core$String$left, i, str));
-			}
-		}
-	});
-var elm$url$Url$fromString = function (str) {
-	return A2(elm$core$String$startsWith, 'http://', str) ? A2(
-		elm$url$Url$chompAfterProtocol,
-		0,
-		A2(elm$core$String$dropLeft, 7, str)) : (A2(elm$core$String$startsWith, 'https://', str) ? A2(
-		elm$url$Url$chompAfterProtocol,
-		1,
-		A2(elm$core$String$dropLeft, 8, str)) : elm$core$Maybe$Nothing);
-};
-var elm$browser$Browser$element = _Browser_element;
-var elm$core$Basics$always = F2(
-	function (a, _n0) {
-		return a;
-	});
-var author$project$Main$main = elm$browser$Browser$element(
-	{
-		aK: function (_n0) {
-			return author$project$Main$init;
-		},
-		aZ: function (_n1) {
-			return author$project$Main$loaded(
-				elm$core$Basics$always(author$project$ClientTypes$Loaded));
-		},
-		a$: author$project$Main$update,
-		a1: author$project$Main$view
-	});
+var elm$browser$Browser$application = _Browser_application;
+var author$project$Main$main = elm$browser$Browser$application(
+	{aR: author$project$Main$init, aX: author$project$Main$ChangedUrl, aY: author$project$Main$RequestedUrl, a4: author$project$Main$subscriptions, a6: author$project$Main$update, a8: author$project$Main$view});
 _Platform_export({'Main':{'init':author$project$Main$main(
 	elm$json$Json$Decode$succeed(0))(0)}});}(this));
