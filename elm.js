@@ -7273,31 +7273,37 @@ var author$project$Page$Story$update = F3(
 							i: checkEnd(newEngineModel),
 							h: A2(elm$core$List$cons, narrativeForThisInteraction, model.h)
 						}),
-					elm$core$Platform$Cmd$none);
+					author$project$Port$toJavaScript(
+						author$project$Port$encode(
+							author$project$Port$Speak(''))));
 			case 1:
 				return author$project$Page$Story$init(model.A);
 			case 2:
 				return _Utils_Tuple2(
 					model,
-					A2(elm$browser$Browser$Navigation$pushUrl, navKey, '/'));
+					elm$core$Platform$Cmd$batch(
+						_List_fromArray(
+							[
+								A2(elm$browser$Browser$Navigation$pushUrl, navKey, '/'),
+								author$project$Port$toJavaScript(
+								author$project$Port$encode(
+									author$project$Port$Speak('')))
+							])));
 			default:
-				var maybeNarrative = A2(
-					elm$core$Maybe$map,
-					function ($) {
-						return $.O;
-					},
-					elm$core$List$head(model.h));
-				var cmds = function () {
-					if (!maybeNarrative.$) {
-						var narrative = maybeNarrative.a;
-						return author$project$Port$toJavaScript(
-							author$project$Port$encode(
-								author$project$Port$Speak(narrative)));
-					} else {
-						return elm$core$Platform$Cmd$none;
-					}
-				}();
-				return _Utils_Tuple2(model, cmds);
+				var narrative = A2(
+					elm$core$Maybe$withDefault,
+					'',
+					A2(
+						elm$core$Maybe$map,
+						function ($) {
+							return $.O;
+						},
+						elm$core$List$head(model.h)));
+				return _Utils_Tuple2(
+					model,
+					author$project$Port$toJavaScript(
+						author$project$Port$encode(
+							author$project$Port$Speak(narrative))));
 		}
 	});
 var NoRedInk$elm_json_decode_pipeline$Json$Decode$Pipeline$custom = elm$json$Json$Decode$map2(elm$core$Basics$apR);
