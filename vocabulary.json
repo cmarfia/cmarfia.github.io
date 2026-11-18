@@ -1,0 +1,51 @@
+{
+  "version": 1,
+  "lists": [
+    {
+      "id": "nov-spelling-test",
+      "title": "November Spelling Test",
+      "words": [
+        { "id": "nov-01", "word": "irrational", "definition": "not based on reasons or facts" },
+        { "id": "nov-02", "word": "intercept", "definition": "to stop and take something while it's between its starting point and destination" },
+        { "id": "nov-03", "word": "illegal", "definition": "not allowed by law" },
+        { "id": "nov-04", "word": "international", "definition": "between or among countries" },
+        { "id": "nov-05", "word": "irresponsible", "definition": "not trusted to do what is right" },
+        { "id": "nov-06", "word": "illegible", "definition": "not able to be read" },
+        { "id": "nov-07", "word": "intersection", "definition": "the place where parts come together" },
+        { "id": "nov-08", "word": "irregular", "definition": "not normal or usual" },
+        { "id": "nov-09", "word": "interaction", "definition": "something that's done between or among people" },
+        { "id": "nov-10", "word": "illogical", "definition": "does not make sense" },
+        { "id": "nov-11", "word": "irreplaceable", "definition": "not capable of being duplicated or exchanged for another item" },
+        { "id": "nov-12", "word": "intercede", "definition": "to try to help settle an argument between people" }
+      ]
+    },
+    {
+      "id": "economics-industry",
+      "title": "Economics & Industry",
+      "words": [
+        { "id": "ei-01", "word": "Consumer", "definition": "Someone who buys or uses goods or services" },
+        { "id": "ei-02", "word": "Investor", "definition": "Someone who puts money into a business to make a profit" },
+        { "id": "ei-03", "word": "Profit", "definition": "the money an investor earns when a business does well" },
+        { "id": "ei-04", "word": "Competitor", "definition": "Rival; someone buying or selling goods in the same market" },
+        { "id": "ei-05", "word": "Free Enterprise System", "definition": "A system where people can start their own businesses or do their own work" },
+        { "id": "ei-06", "word": "Entrepreneur", "definition": "Someone who creates and runs a new business and takes on all business risks" },
+        { "id": "ei-07", "word": "Stock", "definition": "A share of a company" },
+        { "id": "ei-08", "word": "Assembly Line", "definition": "A process where a product is put together as it moves past a line of workers" },
+        { "id": "ei-09", "word": "Monopoly", "definition": "A company that has control of an entire industry" }
+      ]
+    },
+    {
+      "id": "society-urban-growth",
+      "title": "Society & Urban Growth",
+      "words": [
+        { "id": "sug-01", "word": "Urbanization", "definition": "Growth of cities" },
+        { "id": "sug-02", "word": "Diversity", "definition": "A variety" },
+        { "id": "sug-03", "word": "Prejudice", "definition": "Unfair negative opinions about a group of people" },
+        { "id": "sug-04", "word": "Oppression", "definition": "Unjust treatment by a government" },
+        { "id": "sug-05", "word": "Tenement", "definition": "A building divided into small apartments" },
+        { "id": "sug-06", "word": "Labor Union", "definition": "A group of workers who unite to demand better wages and working conditions" },
+        { "id": "sug-07", "word": "Melting Pot", "definition": "A place where Europeans could 'melt' old ideas and prejudices and be molded into new people called americans" }
+      ]
+    }
+  ]
+}
